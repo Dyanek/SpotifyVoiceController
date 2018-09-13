@@ -16,9 +16,9 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
 {
-    private Button btnOpenMic;
+    private final int REQ_CODE_SPEECH_OUTPUT = 1;
+    private Button btnOpenMicrophone;
     private TextView txtShowVoiceOutput;
-    private final int REQ_CODE_SPEECH_OUTPUT = 143;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -26,20 +26,20 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnOpenMic = findViewById(R.id.button);
+        btnOpenMicrophone = findViewById(R.id.button);
         txtShowVoiceOutput = findViewById(R.id.showVoiceOutput);
 
-        btnOpenMic.setOnClickListener(new View.OnClickListener()
+        btnOpenMicrophone.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                ButtonToOpenMic();
+                OpenMicrophoneButtonPressed();
             }
         });
     }
 
-    private void ButtonToOpenMic()
+    private void OpenMicrophoneButtonPressed()
     {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
@@ -53,25 +53,23 @@ public class MainActivity extends AppCompatActivity
         }
         catch (ActivityNotFoundException tim)
         {
-            Toast toast = Toast.makeText(getApplicationContext(), "Erreur micro ne fonctionnant pas: " + tim.getMessage(), Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(getApplicationContext(), "Erreur micro ne fonctionnant pas : " + tim.getMessage(), Toast.LENGTH_LONG);
+            toast.show();
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
     {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch(requestCode)
+        if(requestCode == REQ_CODE_SPEECH_OUTPUT)
         {
-            case REQ_CODE_SPEECH_OUTPUT: {
-                if(resultCode == RESULT_OK && data != null)
-                {
-                    ArrayList<String> voiceInText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    txtShowVoiceOutput.setText(voiceInText.get(0));
-                }
-                break;
+            if(resultCode == RESULT_OK && data != null)
+            {
+                ArrayList<String> voiceInText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                txtShowVoiceOutput.setText(voiceInText.get(0));
             }
+            else
+                txtShowVoiceOutput.setText("Action incomplète");
         }
     }
 }
