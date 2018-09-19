@@ -107,7 +107,8 @@ public class MainActivity extends AppCompatActivity
         try
         {
             startActivityForResult(intent, REQ_CODE_SPEECH_OUTPUT);
-        } catch (ActivityNotFoundException tim)
+        }
+        catch (ActivityNotFoundException tim)
         {
             Toast toast = Toast.makeText(getApplicationContext(), "Cet appareil ne supporte pas d'entrée vocale.", Toast.LENGTH_SHORT);
             toast.show();
