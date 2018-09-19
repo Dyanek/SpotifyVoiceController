@@ -29,8 +29,6 @@ public class MainActivity extends AppCompatActivity
     private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
     private SpotifyAppRemote mSpotifyAppRemote;
 
-    // Spotify ClientSecret = 517bac5fcbec4886a872022117f3d4cf;
-
     private final int REQ_CODE_SPEECH_OUTPUT = 100;
     private Button btnOpenMicrophone;
     private TextView txtShowVoiceOutput;
@@ -74,7 +72,6 @@ public class MainActivity extends AppCompatActivity
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.d("MainActivity", "Connected! Yay!");
 
-                        // Now you can start interacting with App Remote
                         connected();
                     }
 
@@ -82,8 +79,6 @@ public class MainActivity extends AppCompatActivity
                     public void onFailure(Throwable throwable)
                     {
                         Log.e("MainActivity", throwable.getMessage(), throwable);
-
-                        // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
     }
