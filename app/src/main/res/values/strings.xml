@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Spotify voice controller</string>
-    <string name="show_voice_output">Show voice output</string>
-    <string name="btn_to_mic_open">Btn to mic open</string>
+    <string name="homepage">Homepage</string>
+    <string name="btn_to_open_mic">What can I do?</string>
 </resources>

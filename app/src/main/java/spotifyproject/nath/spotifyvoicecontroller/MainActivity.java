@@ -2,6 +2,7 @@ package spotifyproject.nath.spotifyvoicecontroller;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
@@ -9,12 +10,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Locale;
+import java.util.HashMap;
 
+import com.google.gson.Gson;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -22,16 +23,23 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
+import com.spotify.sdk.android.authentication.AuthenticationClient;
+import com.spotify.sdk.android.authentication.AuthenticationRequest;
+import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
-public class MainActivity extends AppCompatActivity
+import static com.spotify.sdk.android.authentication.LoginActivity.REQUEST_CODE;
+
+public class MainActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
     private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
     private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
-    private SpotifyAppRemote mSpotifyAppRemote;
+    private static final int SPOTIFY_REQUEST_CODE = 1337;
+    public static SpotifyAppRemote mSpotifyAppRemote;
+
+    public static final String PREFS_NAME = "PrefFile";
 
     private final int REQ_CODE_SPEECH_OUTPUT = 100;
     private Button btnOpenMicrophone;
-    private TextView txtShowVoiceOutput;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -40,7 +48,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         btnOpenMicrophone = findViewById(R.id.button);
-        txtShowVoiceOutput = findViewById(R.id.showVoiceOutput);
 
         btnOpenMicrophone.setOnClickListener(new View.OnClickListener()
         {
@@ -57,36 +64,13 @@ public class MainActivity extends AppCompatActivity
     {
         super.onStart();
 
-        // Set the connection parameters
-        ConnectionParams connectionParams = new ConnectionParams.Builder(CLIENT_ID)
-                .setRedirectUri(REDIRECT_URI)
-                .showAuthView(true)
-                .build();
+        AuthenticationRequest.Builder builder =
+                new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-        SpotifyAppRemote.CONNECTOR.connect(this, connectionParams,
-                new Connector.ConnectionListener()
-                {
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote)
-                    {
-                        mSpotifyAppRemote = spotifyAppRemote;
-                        Log.d("MainActivity", "Connected! Yay!");
+        builder.setScopes(new String[]{"streaming"});
+        AuthenticationRequest request = builder.build();
 
-                        connected();
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable)
-                    {
-                        Log.e("MainActivity", throwable.getMessage(), throwable);
-                    }
-                });
-    }
-
-    private void connected()
-    {
-        Toast toast = Toast.makeText(getApplicationContext(), "Connected to Spotify", Toast.LENGTH_SHORT);
-        toast.show();
+        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
     @Override
@@ -110,23 +94,60 @@ public class MainActivity extends AppCompatActivity
         }
         catch (ActivityNotFoundException tim)
         {
-            Toast toast = Toast.makeText(getApplicationContext(), "Cet appareil ne supporte pas d'entrée vocale.", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(getApplicationContext(), "No voice input detected on this device.", Toast.LENGTH_SHORT);
             toast.show();
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
     {
-        if (requestCode == REQ_CODE_SPEECH_OUTPUT)
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        // Check if result comes from the correct activity
+        if (requestCode == SPOTIFY_REQUEST_CODE)
         {
-            if (resultCode == RESULT_OK && data != null)
+            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+
+            switch (response.getType())
             {
-                ArrayList<String> voiceInText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                txtShowVoiceOutput.setText(voiceInText.get(0));
+                // Response was successful and contains auth token
+                case TOKEN:
+                    // Handle successful response
+                    Toast toast = Toast.makeText(getApplicationContext(), "Handle successful", Toast.LENGTH_LONG);
+                    toast.show();
+                    break;
+
+                // Auth flow returned an error
+                case ERROR:
+                    // Handle error response
+                    Toast toast2 = Toast.makeText(getApplicationContext(), "Handle error", Toast.LENGTH_LONG);
+                    toast2.show();
+                    break;
+
+                // Most likely auth flow was cancelled
+                default:
+                    // Handle other cases
+                    Toast toast3 = Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_LONG);
+                    toast3.show();
             }
-            else
-                txtShowVoiceOutput.setText("Action incomplète");
+        }
+    }
+
+    @Override
+    public void onDownloadComplete(String content, Integer requestCode)
+    {
+        try
+        {
+            Gson gson = new Gson();
+            JsonTrack obj = gson.fromJson(content, JsonTrack.class);
+
+            mSpotifyAppRemote.getPlayerApi().play(obj.getUri());
+        }
+        catch (Exception ex)
+        {
+            Toast toast = Toast.makeText(getApplicationContext(), ex.getMessage(), Toast.LENGTH_LONG);
+            toast.show();
         }
     }
 }
