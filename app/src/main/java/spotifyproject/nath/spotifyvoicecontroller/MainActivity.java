@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
     public static final String PREFS_NAME = "PrefFile";
 
-    private final int REQ_CODE_SPEECH_OUTPUT = 100;
+    private final int SPEECH_OUPUT_REQUEST_CODE = 100;
     private Button btnOpenMicrophone;
 
     @Override
@@ -70,13 +70,46 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
         builder.setScopes(new String[]{"streaming"});
         AuthenticationRequest request = builder.build();
 
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
+
+        // Set the connection parameters---------------------------------------------------------------------
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(true)
+                        .build();
+
+        SpotifyAppRemote.CONNECTOR.connect(this, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        mSpotifyAppRemote = spotifyAppRemote;
+                        Log.d("MainActivity", "Connected! Yay!");
+
+                        // Now you can start interacting with App Remote
+                        connected();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e("MainActivity", throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
+    }
+
+    public void connected()
+    {
+
     }
 
     @Override
     protected void onStop()
     {
         super.onStop();
+
         SpotifyAppRemote.CONNECTOR.disconnect(mSpotifyAppRemote);
     }
 
@@ -90,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
         try
         {
-            startActivityForResult(intent, REQ_CODE_SPEECH_OUTPUT);
+            startActivityForResult(intent, SPEECH_OUPUT_REQUEST_CODE);
         }
         catch (ActivityNotFoundException tim)
         {
@@ -131,6 +164,18 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                     Toast toast3 = Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_LONG);
                     toast3.show();
             }
+        }
+
+        if(requestCode == SPEECH_OUPUT_REQUEST_CODE)
+        {
+
+            HashMap<String, String> songSearch = new HashMap<>();
+            songSearch.put("q", "fade%20to%20black");
+            songSearch.put("type", "track");
+
+            WebService webService = new WebService(getApplicationContext(), songSearch);
+            webService.setOnDownloadCompleteListener(this);
+            webService.execute();
         }
     }
 
