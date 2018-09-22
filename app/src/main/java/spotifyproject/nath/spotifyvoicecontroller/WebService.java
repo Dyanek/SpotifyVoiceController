@@ -22,7 +22,7 @@ public class WebService extends AsyncTask<Void, Void, String>
 {
     private Context _myContext;
     private HashMap<String, String> _paramsToSearch;
-    public ArrayList<OnDownloadCompleteListener> listeners = new ArrayList<>();
+    private ArrayList<OnDownloadCompleteListener> listeners = new ArrayList<>();
 
     public WebService(Context context, HashMap<String, String> paramsToSearch)
     {
@@ -45,7 +45,7 @@ public class WebService extends AsyncTask<Void, Void, String>
     @Override
     protected String doInBackground(Void... arg0)
     {
-        return performPostCall("https://accounts.spotify.com/api/token", _paramsToSearch);
+        return performPostCall("https://api.spotify.com/v1/search", _paramsToSearch);
     }
 
     public void setOnDownloadCompleteListener(OnDownloadCompleteListener listener)
@@ -62,7 +62,7 @@ public class WebService extends AsyncTask<Void, Void, String>
         }
     }
 
-    public String performPostCall(String requestURL, HashMap<String, String> postDataParams)
+    private String performPostCall(String requestURL, HashMap<String, String> postDataParams)
     {
         URL url;
         String response = "";
@@ -77,10 +77,10 @@ public class WebService extends AsyncTask<Void, Void, String>
             connection.setDoOutput(true);
             OutputStream os = connection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            /*writer.write(getPostDataString(postDataParams));
+            writer.write(getPostDataString(postDataParams));
             writer.flush();
             writer.close();
-            os.close();*/
+            os.close();
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpsURLConnection.HTTP_OK)
             {

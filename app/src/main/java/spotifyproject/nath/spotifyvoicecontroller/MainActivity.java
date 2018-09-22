@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
     private final int SPEECH_OUPUT_REQUEST_CODE = 100;
     private Button btnOpenMicrophone;
 
+    private String accessToken;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -149,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                     // Handle successful response
                     Toast toast = Toast.makeText(getApplicationContext(), "Handle successful", Toast.LENGTH_LONG);
                     toast.show();
+
+                    accessToken = response.getAccessToken();
                     break;
 
                 // Auth flow returned an error
@@ -168,8 +172,8 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
         if(requestCode == SPEECH_OUPUT_REQUEST_CODE)
         {
-
             HashMap<String, String> songSearch = new HashMap<>();
+            songSearch.put("token", accessToken);
             songSearch.put("q", "fade%20to%20black");
             songSearch.put("type", "track");
 
