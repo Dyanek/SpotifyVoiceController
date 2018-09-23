@@ -90,11 +90,13 @@ public class WebService extends AsyncTask<Void, Void, String>
                 {
                     response += line;
                 }
-            } else
+            }
+            else
             {
                 response = "";
             }
-        } catch (Exception e)
+        }
+            catch (Exception e)
         {
             e.printStackTrace();
         }

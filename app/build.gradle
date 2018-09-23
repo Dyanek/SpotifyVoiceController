@@ -28,6 +28,7 @@ dependencies {
 
     implementation project(':spotify-app-remote')
     implementation 'com.google.code.gson:gson:2.8.2'
-
     implementation 'com.github.spotify:android-auth:9425c6a140'
+
+    implementation project(':volley')
 }
