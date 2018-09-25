@@ -21,11 +21,13 @@
 
     <Button
         android:id="@+id/btnOpenMic"
+        android:enabled="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:text="@string/btn_to_open_mic"
-        android:background="@color/colorButtonBackground"
+        android:textColor="@color/colorUnavailableButtonText"
+        android:background="@color/colorUnavailableButtonBg"
         android:padding="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

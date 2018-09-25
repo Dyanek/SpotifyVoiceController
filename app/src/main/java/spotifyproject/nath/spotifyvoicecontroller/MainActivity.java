@@ -2,42 +2,35 @@ package spotifyproject.nath.spotifyvoicecontroller;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashMap;
+import java.util.Map;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
-import com.spotify.protocol.types.Track;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements OnDownloadCompleteListener
+public class MainActivity extends AppCompatActivity
 {
     private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
     private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
@@ -46,10 +39,8 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
     private String accessToken;
 
-    private final int SPEECH_OUPUT_REQUEST_CODE = 100;
+    private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
     private Button btnOpenMicrophone;
-
-    private TextView txtHomePage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -67,8 +58,6 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                 OpenMicrophoneButtonPressed();
             }
         });
-
-        txtHomePage = findViewById(R.id.txtHomePage);
     }
 
     @Override
@@ -76,15 +65,13 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
     {
         super.onStart();
 
-        AuthenticationRequest.Builder builder =
-                new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
         builder.setScopes(new String[]{"streaming"});
         AuthenticationRequest request = builder.build();
 
         AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
 
-        //-------------------------------------------------------------------------------------------
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(CLIENT_ID)
                         .setRedirectUri(REDIRECT_URI)
@@ -105,14 +92,16 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                     @Override
                     public void onFailure(Throwable throwable)
                     {
-                        Log.e("MainActivity", throwable.getMessage(), throwable);
+                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
     public void connected()
     {
-
+        btnOpenMicrophone.setEnabled(true);
+        btnOpenMicrophone.setBackgroundResource(R.color.colorButtonBackground);
+        btnOpenMicrophone.setTextColor(getColor(R.color.colorButtonText));
     }
 
     @Override
@@ -133,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
         try
         {
-            startActivityForResult(intent, SPEECH_OUPUT_REQUEST_CODE);
+            startActivityForResult(intent, SPEECH_OUTPUT_REQUEST_CODE);
         }
         catch (ActivityNotFoundException tim)
         {
@@ -146,81 +135,91 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
     {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Spotify auth check
         if (requestCode == SPOTIFY_REQUEST_CODE)
         {
-            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
-
-            switch (response.getType())
-            {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    Toast.makeText(getApplicationContext(), "Handle successful", Toast.LENGTH_LONG).show();
-
-                    accessToken = response.getAccessToken();
-                    break;
-
-                // Auth flow returned an error
-                case ERROR:
-                    // Handle error response
-                    Toast.makeText(getApplicationContext(), "Handle error", Toast.LENGTH_LONG).show();
-                    break;
-
-                // Most likely auth flow was cancelled
-                default:
-                    // Handle other cases
-                    Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_LONG).show();
-            }
+            SpotifyConnectionResult(resultCode, intent);
         }
 
-        //Voice input check
-        if (requestCode == SPEECH_OUPUT_REQUEST_CODE)
+        if (requestCode == SPEECH_OUTPUT_REQUEST_CODE)
         {
-            RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String url = "https://api.spotify.com/v1/search";
-            //String url = "http://www.google.com";
-
-            //JSONObject authorizationJSON = new JSONObject();
-
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                    (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            txtHomePage.setText("Response: " + response);
-                        }
-                    }, new Response.ErrorListener() {
-
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-
-                        }
-                    });
-
-            requestQueue.add(jsonObjectRequest);
-
-            /*WebService webService = new WebService(getApplicationContext(), songSearch);
-            webService.setOnDownloadCompleteListener(this);
-            webService.execute();*/
+            SpeechOutputResult();
         }
     }
 
-    @Override
-    public void onDownloadComplete(String content, Integer requestCode)
+    private void SpeechOutputResult()
     {
-        try
-        {
-            Gson gson = new Gson();
-            JsonTrack obj = gson.fromJson(content, JsonTrack.class);
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        String url = "https://api.spotify.com/v1/search?q=La%20vraie%20vie&type=track&limit=1";
 
-            mSpotifyAppRemote.getPlayerApi().play(obj.getUri());
-        }
-        catch (Exception ex)
+        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.GET, url, null,
+                        new Response.Listener<JSONObject>()
+                        {
+
+                            @Override
+                            public void onResponse(JSONObject response)
+                            {
+                                try
+                                {
+                                    String uri = response.getJSONObject("tracks").getJSONArray("items")
+                                            .getJSONObject(0).getString("uri");
+
+                                    mSpotifyAppRemote.getPlayerApi().play(uri);
+                                }
+                                catch (JSONException ex)
+                                {
+                                    Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }, new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
         {
-            Toast toast = Toast.makeText(getApplicationContext(), ex.getMessage(), Toast.LENGTH_LONG);
-            toast.show();
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError
+            {
+                Map<String, String> headers = new HashMap<String, String>();
+                headers.put("Accept", "application/json");
+                headers.put("Authorization", "Bearer " + accessToken);
+
+                return headers;
+            }
+        };
+
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    private void SpotifyConnectionResult(int resultCode, Intent intent)
+    {
+        AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+
+        switch (response.getType())
+        {
+            // Response was successful and contains auth token
+            case TOKEN:
+                // Handle successful response
+                Toast.makeText(getApplicationContext(), "Connected to Spotify", Toast.LENGTH_SHORT).show();
+
+                accessToken = response.getAccessToken();
+                break;
+
+            // Auth flow returned an error
+            case ERROR:
+                // Handle error response
+                Toast.makeText(getApplicationContext(), "Error while connecting to Spotify", Toast.LENGTH_SHORT).show();
+                break;
+
+            // Most likely auth flow was cancelled
+            default:
+                // Handle other cases
+                accessToken = response.getAccessToken();
+
+                Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_SHORT).show();
         }
     }
 }
