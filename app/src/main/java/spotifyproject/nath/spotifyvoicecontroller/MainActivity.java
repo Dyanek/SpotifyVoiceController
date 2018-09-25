@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
-            if(words[0].equals("play"))
+            if(words[0].equals("play") || words[0].equals("next"))
             {
                 String url = "https://api.spotify.com/v1/search?type=track&limit=1&q=";
 
@@ -174,19 +174,20 @@ public class MainActivity extends AppCompatActivity
 
                 url = url.substring(0, url.length()-3);
 
-                trackJsonRequest(url);
+                trackJsonRequest(url, words[0]);
             }
+            if(words[0].equals("skip"))
+                spotifyAppRemote.getPlayerApi().skipNext();
         }
         else
             Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
     }
 
-    private void trackJsonRequest(String url)
+    private void trackJsonRequest(String url, final String instruction)
     {
         final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>()
                 {
-
                     @Override
                     public void onResponse(JSONObject response)
                     {
@@ -195,7 +196,10 @@ public class MainActivity extends AppCompatActivity
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
 
-                            spotifyAppRemote.getPlayerApi().play(uri);
+                            if(instruction.equals("play"))
+                                spotifyAppRemote.getPlayerApi().play(uri);
+                            else
+                                spotifyAppRemote.getPlayerApi().queue(uri);
                         }
                         catch (JSONException ex)
                         {
