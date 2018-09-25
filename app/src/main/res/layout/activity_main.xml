@@ -21,14 +21,17 @@
 
     <Button
         android:id="@+id/btnOpenMic"
-        android:enabled="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:text="@string/btn_to_open_mic"
-        android:textColor="@color/colorUnavailableButtonText"
-        android:background="@color/colorUnavailableButtonBg"
+        android:layout_marginTop="10dp"
         android:padding="10dp"
+        android:enabled="false"
+        android:background="@color/colorUnavailableButtonBg"
+        android:text="@string/btn_to_open_mic"
+        android:drawableRight="@drawable/ic_mic_black_24dp"
+        android:textColor="@color/colorUnavailableButtonText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

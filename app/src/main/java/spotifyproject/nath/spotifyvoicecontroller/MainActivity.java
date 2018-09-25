@@ -4,11 +4,13 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +37,9 @@ public class MainActivity extends AppCompatActivity
     private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
     private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
     private static final int SPOTIFY_REQUEST_CODE = 1337;
-    public static SpotifyAppRemote mSpotifyAppRemote;
+    public static SpotifyAppRemote spotifyAppRemote;
+
+    public static RequestQueue requestQueue;
 
     private String accessToken;
 
@@ -47,6 +51,8 @@ public class MainActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        requestQueue = Volley.newRequestQueue(this);
 
         btnOpenMicrophone = findViewById(R.id.btnOpenMic);
 
@@ -82,11 +88,11 @@ public class MainActivity extends AppCompatActivity
                 new Connector.ConnectionListener()
                 {
                     @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote)
+                    public void onConnected(SpotifyAppRemote mSpotifyAppRemote)
                     {
-                        mSpotifyAppRemote = spotifyAppRemote;
+                        spotifyAppRemote = mSpotifyAppRemote;
 
-                        connected();
+                        enableSpeechButton();
                     }
 
                     @Override
@@ -97,7 +103,7 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
-    public void connected()
+    public void enableSpeechButton()
     {
         btnOpenMicrophone.setEnabled(true);
         btnOpenMicrophone.setBackgroundResource(R.color.colorButtonBackground);
@@ -109,7 +115,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onStop();
 
-        SpotifyAppRemote.CONNECTOR.disconnect(mSpotifyAppRemote);
+        SpotifyAppRemote.CONNECTOR.disconnect(spotifyAppRemote);
     }
 
     private void OpenMicrophoneButtonPressed()
@@ -135,50 +141,75 @@ public class MainActivity extends AppCompatActivity
     {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == SPOTIFY_REQUEST_CODE)
+        switch(requestCode)
         {
-            SpotifyConnectionResult(resultCode, intent);
-        }
+            case SPOTIFY_REQUEST_CODE:
+            {
+                SpotifyConnectionResult(resultCode, intent);
 
-        if (requestCode == SPEECH_OUTPUT_REQUEST_CODE)
-        {
-            SpeechOutputResult();
+                break;
+            }
+
+            case SPEECH_OUTPUT_REQUEST_CODE:
+            {
+                SpeechOutputResult(resultCode, intent);
+
+                break;
+            }
         }
     }
 
-    private void SpeechOutputResult()
+    private void SpeechOutputResult(int resultCode, Intent intent)
     {
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String url = "https://api.spotify.com/v1/search?q=La%20vraie%20vie&type=track&limit=1";
+        if(resultCode == RESULT_OK && intent != null)
+        {
+            String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
-        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null,
-                        new Response.Listener<JSONObject>()
-                        {
+            if(words[0].equals("play"))
+            {
+                String url = "https://api.spotify.com/v1/search?type=track&limit=1&q=";
 
-                            @Override
-                            public void onResponse(JSONObject response)
-                            {
-                                try
-                                {
-                                    String uri = response.getJSONObject("tracks").getJSONArray("items")
-                                            .getJSONObject(0).getString("uri");
+                for(int i = 1; i <= words.length-1; i++)
+                    url += words[i] + "%20";
 
-                                    mSpotifyAppRemote.getPlayerApi().play(uri);
-                                }
-                                catch (JSONException ex)
-                                {
-                                    Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }, new Response.ErrorListener()
+                url = url.substring(0, url.length()-3);
+
+                trackJsonRequest(url);
+            }
+        }
+        else
+            Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
+    }
+
+    private void trackJsonRequest(String url)
+    {
+        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
                 {
+
                     @Override
-                    public void onErrorResponse(VolleyError error)
+                    public void onResponse(JSONObject response)
                     {
-                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        try
+                        {
+                            String uri = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getString("uri");
+
+                            spotifyAppRemote.getPlayerApi().play(uri);
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                })
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
         {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError
