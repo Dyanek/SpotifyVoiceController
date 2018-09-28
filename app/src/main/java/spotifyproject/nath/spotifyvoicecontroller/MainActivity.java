@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -46,6 +48,10 @@ public class MainActivity extends AppCompatActivity
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
     private Button btnOpenMicrophone;
 
+    private RecyclerView rvTrackList;
+    private RecyclerView.Adapter rvAdapter;
+    private RecyclerView.LayoutManager rvLayoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -53,6 +59,14 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         requestQueue = Volley.newRequestQueue(this);
+
+        rvTrackList = findViewById(R.id.rvTrackList);
+
+        rvLayoutManager = new LinearLayoutManager(this);
+        rvTrackList.setLayoutManager(rvLayoutManager);
+
+        rvAdapter = new TrackAdapter(new String[] { "Ceci est", "Un test pour", "Le RecyclerView"});
+        rvTrackList.setAdapter(rvAdapter);
 
         btnOpenMicrophone = findViewById(R.id.btnOpenMic);
 
@@ -216,9 +230,9 @@ public class MainActivity extends AppCompatActivity
         })
         {
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError
+            public Map<String, String> getHeaders()
             {
-                Map<String, String> headers = new HashMap<String, String>();
+                Map<String, String> headers = new HashMap<>();
                 headers.put("Accept", "application/json");
                 headers.put("Authorization", "Bearer " + accessToken);
 
