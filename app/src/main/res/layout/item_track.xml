@@ -3,11 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:background="@color/colorPrimary">
 
     <ImageView
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_margin="25dp"
         android:src="@drawable/ic_play_circle" />
 
@@ -15,6 +16,19 @@
         android:id="@+id/item_track_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp" />
+        android:textColor="@color/colorWhite"/>
+
+    <TextView
+        android:id="@+id/item_album_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"
+        android:layout_margin="20dp"/>
+
+    <TextView
+        android:id="@+id/item_artist_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"/>
 
 </LinearLayout>

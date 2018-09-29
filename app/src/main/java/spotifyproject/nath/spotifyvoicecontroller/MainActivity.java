@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +53,8 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter rvAdapter;
     private RecyclerView.LayoutManager rvLayoutManager;
 
+    private ArrayList<Track> trackList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -65,7 +68,9 @@ public class MainActivity extends AppCompatActivity
         rvLayoutManager = new LinearLayoutManager(this);
         rvTrackList.setLayoutManager(rvLayoutManager);
 
-        rvAdapter = new TrackAdapter(new String[] { "Ceci est", "Un test pour", "Le RecyclerView"});
+        trackList = new ArrayList<>();
+
+        rvAdapter = new TrackAdapter(trackList);
         rvTrackList.setAdapter(rvAdapter);
 
         btnOpenMicrophone = findViewById(R.id.btnOpenMic);
@@ -209,6 +214,20 @@ public class MainActivity extends AppCompatActivity
                         {
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
+
+                            String name = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getString("name");
+
+                            String album = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getJSONObject("album").getString("name");
+
+                            String artist = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
+
+                            Track track = new Track(name, album, artist, uri);
+
+                            trackList.add(track);
+                            rvAdapter.notifyItemInserted(trackList.size()-1);
 
                             if(instruction.equals("play"))
                                 spotifyAppRemote.getPlayerApi().play(uri);
