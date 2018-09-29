@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity
         rvAdapter = new TrackAdapter(trackList);
         rvTrackList.setAdapter(rvAdapter);
 
-        btnOpenMicrophone = findViewById(R.id.btnOpenMic);
+        btnOpenMicrophone = findViewById(R.id.btn_open_mic);
 
         btnOpenMicrophone.setOnClickListener(new View.OnClickListener()
         {
@@ -195,8 +195,12 @@ public class MainActivity extends AppCompatActivity
 
                 trackJsonRequest(url, words[0]);
             }
-            if(words[0].equals("skip"))
+            else if(words[0].equals("skip"))
                 spotifyAppRemote.getPlayerApi().skipNext();
+            else if(words[0].equals("pause") || words[0].equals("stop"))
+                spotifyAppRemote.getPlayerApi().pause();
+            else if(words[0].equals("resume"))
+                spotifyAppRemote.getPlayerApi().resume();
         }
         else
             Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
@@ -226,8 +230,8 @@ public class MainActivity extends AppCompatActivity
 
                             Track track = new Track(name, album, artist, uri);
 
-                            trackList.add(track);
-                            rvAdapter.notifyItemInserted(trackList.size()-1);
+                            trackList.add(0, track);
+                            rvAdapter.notifyItemInserted(0);
 
                             if(instruction.equals("play"))
                                 spotifyAppRemote.getPlayerApi().play(uri);
@@ -270,7 +274,6 @@ public class MainActivity extends AppCompatActivity
         {
             // Response was successful and contains auth token
             case TOKEN:
-                // Handle successful response
                 Toast.makeText(getApplicationContext(), "Connected to Spotify", Toast.LENGTH_SHORT).show();
 
                 accessToken = response.getAccessToken();
@@ -278,13 +281,11 @@ public class MainActivity extends AppCompatActivity
 
             // Auth flow returned an error
             case ERROR:
-                // Handle error response
                 Toast.makeText(getApplicationContext(), "Error while connecting to Spotify", Toast.LENGTH_SHORT).show();
                 break;
 
             // Most likely auth flow was cancelled
             default:
-                // Handle other cases
                 accessToken = response.getAccessToken();
 
                 Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_SHORT).show();
