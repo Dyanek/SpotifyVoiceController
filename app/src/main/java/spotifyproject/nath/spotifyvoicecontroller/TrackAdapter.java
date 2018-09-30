@@ -5,9 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 
 public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
@@ -16,38 +14,36 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
 
     static class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
-        TextView txtTrackName;
-        TextView txtAlbumName;
-        TextView txtArtistName;
+        TextView txt_track_name;
+        TextView txt_album_name;
+        TextView txt_artist_name;
 
-        ImageView imgPlayPause;
         String uri;
 
-        TrackHolder(View itemView)
+        TrackHolder(View item_view)
         {
-            super(itemView);
-            txtTrackName = itemView.findViewById(R.id.item_track_name);
-            txtAlbumName = itemView.findViewById(R.id.item_album_name);
-            txtArtistName = itemView.findViewById(R.id.item_artist_name);
-            imgPlayPause = itemView.findViewById(R.id.item_play_pause);
+            super(item_view);
+            txt_track_name = itemView.findViewById(R.id.item_track_name);
+            txt_album_name = itemView.findViewById(R.id.item_album_name);
+            txt_artist_name = itemView.findViewById(R.id.item_artist_name);
             itemView.setOnClickListener(this);
         }
 
         @Override
-        public void onClick(View itemView)
+        public void onClick(View item_view)
         {
-            MainActivity.spotifyAppRemote.getPlayerApi().play(uri);
+            MainActivity.spotify_app_remote.getPlayerApi().play(uri);
         }
     }
 
-    TrackAdapter(ArrayList<Track> mTrackList)
+    TrackAdapter(ArrayList<Track> p_track_list)
     {
-        trackList = mTrackList;
+        trackList = p_track_list;
     }
 
     @NonNull
     @Override
-    public TrackHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+    public TrackHolder onCreateViewHolder(@NonNull ViewGroup parent, int view_type)
     {
         return new TrackHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_track, parent, false));
     }
@@ -55,9 +51,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
     @Override
     public void onBindViewHolder(@NonNull TrackHolder holder, int position)
     {
-        holder.txtTrackName.setText(defineMaximumSize(trackList.get(position).get_name(),30));
-        holder.txtAlbumName.setText(defineMaximumSize(trackList.get(position).get_album(), 20));
-        holder.txtArtistName.setText(defineMaximumSize(holder.txtArtistName.getText() + trackList.get(position).get_artist(), 18));
+        holder.txt_track_name.setText(defineMaximumSize(trackList.get(position).get_name(),30));
+        holder.txt_album_name.setText(defineMaximumSize(trackList.get(position).get_album(), 20));
+        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + trackList.get(position).get_artist(), 18));
         holder.uri = trackList.get(position).get_uri();
     }
 
@@ -67,8 +63,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
         return trackList.size();
     }
 
-    private String defineMaximumSize(String strToCheck, int maxSize)
+    private String defineMaximumSize(String string_to_check, int max_size)
     {
-        return (strToCheck.length() > maxSize) ? strToCheck.substring(0,16) + "..." : strToCheck;
+        return (string_to_check.length() > max_size) ? string_to_check.substring(0,16) + "..." : string_to_check;
     }
 }

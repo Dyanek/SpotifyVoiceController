@@ -38,24 +38,24 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity
 {
-    public static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
-    public static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
-    public static final int SPOTIFY_REQUEST_CODE = 1337;
-    public static SpotifyAppRemote spotifyAppRemote;
-    public static String spotifyUserId;
+    private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
+    private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
+    private static final int SPOTIFY_REQUEST_CODE = 1337;
+    public static SpotifyAppRemote spotify_app_remote;
+    public static String spotify_user_id;
 
-    public static RequestQueue requestQueue;
+    public static RequestQueue request_queue;
 
-    public String accessToken;
+    public String access_token;
 
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
-    private Button btnOpenMicrophone;
+    private Button btn_open_microphone;
 
-    private RecyclerView rvTrackList;
-    private RecyclerView.Adapter rvAdapter;
-    private RecyclerView.LayoutManager rvLayoutManager;
+    private RecyclerView rv_track_list;
+    private RecyclerView.Adapter rv_adapter;
+    private RecyclerView.LayoutManager rv_layout_manager;
 
-    private ArrayList<Track> trackList;
+    private ArrayList<Track> track_list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -63,21 +63,21 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        requestQueue = Volley.newRequestQueue(this);
+        request_queue = Volley.newRequestQueue(this);
 
-        rvTrackList = findViewById(R.id.rvTrackList);
+        rv_track_list = findViewById(R.id.rv_track_list);
 
-        rvLayoutManager = new LinearLayoutManager(this);
-        rvTrackList.setLayoutManager(rvLayoutManager);
+        rv_layout_manager = new LinearLayoutManager(this);
+        rv_track_list.setLayoutManager(rv_layout_manager);
 
-        trackList = new ArrayList<>();
+        track_list = new ArrayList<>();
 
-        rvAdapter = new TrackAdapter(trackList);
-        rvTrackList.setAdapter(rvAdapter);
+        rv_adapter = new TrackAdapter(track_list);
+        rv_track_list.setAdapter(rv_adapter);
 
-        btnOpenMicrophone = findViewById(R.id.btn_open_mic);
+        btn_open_microphone = findViewById(R.id.btn_open_mic);
 
-        btnOpenMicrophone.setOnClickListener(new View.OnClickListener()
+        btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -100,21 +100,21 @@ public class MainActivity extends AppCompatActivity
 
         AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
 
-        ConnectionParams connectionParams =
+        ConnectionParams connection_params =
                 new ConnectionParams.Builder(CLIENT_ID)
                         .setRedirectUri(REDIRECT_URI)
                         .showAuthView(true)
                         .build();
 
-        SpotifyAppRemote.CONNECTOR.connect(this, connectionParams,
+        SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
                 new Connector.ConnectionListener()
                 {
                     @Override
-                    public void onConnected(SpotifyAppRemote mSpotifyAppRemote)
+                    public void onConnected(SpotifyAppRemote p_spotify_app_remote)
                     {
-                        spotifyAppRemote = mSpotifyAppRemote;
+                        spotify_app_remote = p_spotify_app_remote;
 
-                        enableSpeechButton();
+                        enableSpeechButtonClick();
                     }
 
                     @Override
@@ -125,11 +125,11 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
-    public void enableSpeechButton()
+    public void enableSpeechButtonClick()
     {
-        btnOpenMicrophone.setEnabled(true);
-        btnOpenMicrophone.setBackgroundResource(R.color.colorButtonBackground);
-        btnOpenMicrophone.setTextColor(getColor(R.color.colorButtonText));
+        btn_open_microphone.setEnabled(true);
+        btn_open_microphone.setBackgroundResource(R.color.colorButtonBackground);
+        btn_open_microphone.setTextColor(getColor(R.color.colorButtonText));
     }
 
     @Override
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onStop();
 
-        SpotifyAppRemote.CONNECTOR.disconnect(spotifyAppRemote);
+        SpotifyAppRemote.CONNECTOR.disconnect(spotify_app_remote);
     }
 
     private void OpenMicrophoneButtonPressed()
@@ -159,23 +159,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    protected void onActivityResult(int request_code, int result_code, Intent intent)
     {
-        super.onActivityResult(requestCode, resultCode, intent);
+        super.onActivityResult(request_code, result_code, intent);
 
-        switch(requestCode)
+        switch(request_code)
         {
             case SPOTIFY_REQUEST_CODE:
             {
-                spotifyConnectionResult(resultCode, intent);
-
+                spotifyConnectionResult(result_code, intent);
                 break;
             }
 
             case SPEECH_OUTPUT_REQUEST_CODE:
             {
-                speechOutputResult(resultCode, intent);
-
+                speechOutputResult(result_code, intent);
                 break;
             }
         }
@@ -191,11 +189,11 @@ public class MainActivity extends AppCompatActivity
                     {
                         try
                         {
-                            JSONArray tracksArray = response.getJSONArray("items");
+                            JSONArray tracks_array = response.getJSONArray("items");
 
-                            for(int i = tracksArray.length()-1; i >= 0; i--)
+                            for(int i = tracks_array.length()-1; i >= 0; i--)
                             {
-                                JSONObject track = (JSONObject) tracksArray.get(i);
+                                JSONObject track = (JSONObject) tracks_array.get(i);
 
                                 String uri = track.getJSONObject("track").getString("uri");
 
@@ -205,10 +203,10 @@ public class MainActivity extends AppCompatActivity
 
                                 String artist = track.getJSONObject("track").getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
-                                trackList.add(0, new Track(name, album, artist, uri));
+                                track_list.add(0, new Track(name, album, artist, uri));
                             }
 
-                            rvAdapter.notifyItemInserted(0);
+                            rv_adapter.notifyItemInserted(0);
                         }
                         catch (JSONException ex)
                         {
@@ -229,18 +227,18 @@ public class MainActivity extends AppCompatActivity
             {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Accept", "application/json");
-                headers.put("Authorization", "Bearer " + accessToken);
+                headers.put("Authorization", "Bearer " + access_token);
 
                 return headers;
             }
         };
 
-        requestQueue.add(request);
+        request_queue.add(request);
     }
 
-    private void speechOutputResult(int resultCode, Intent intent)
+    private void speechOutputResult(int result_code, Intent intent)
     {
-        if(resultCode == RESULT_OK && intent != null)
+        if(result_code == RESULT_OK && intent != null)
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
@@ -256,11 +254,11 @@ public class MainActivity extends AppCompatActivity
                 trackJsonRequest(url, words[0]);
             }
             else if(words[0].equals("skip"))
-                spotifyAppRemote.getPlayerApi().skipNext();
+                spotify_app_remote.getPlayerApi().skipNext();
             else if(words[0].equals("pause") || words[0].equals("stop"))
-                spotifyAppRemote.getPlayerApi().pause();
+                spotify_app_remote.getPlayerApi().pause();
             else if(words[0].equals("resume"))
-                spotifyAppRemote.getPlayerApi().resume();
+                spotify_app_remote.getPlayerApi().resume();
         }
         else
             Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
@@ -268,7 +266,7 @@ public class MainActivity extends AppCompatActivity
 
     private void trackJsonRequest(String url, final String instruction)
     {
-        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>()
                 {
                     @Override
@@ -288,13 +286,13 @@ public class MainActivity extends AppCompatActivity
                             String artist = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
-                            trackList.add(0, new Track(name, album, artist, uri));
-                            rvAdapter.notifyItemInserted(0);
+                            track_list.add(0, new Track(name, album, artist, uri));
+                            rv_adapter.notifyItemInserted(0);
 
                             if(instruction.equals("play"))
-                                spotifyAppRemote.getPlayerApi().play(uri);
+                                spotify_app_remote.getPlayerApi().play(uri);
                             else
-                                spotifyAppRemote.getPlayerApi().queue(uri);
+                                spotify_app_remote.getPlayerApi().queue(uri);
                         }
                         catch (JSONException ex)
                         {
@@ -315,18 +313,18 @@ public class MainActivity extends AppCompatActivity
             {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Accept", "application/json");
-                headers.put("Authorization", "Bearer " + accessToken);
+                headers.put("Authorization", "Bearer " + access_token);
 
                 return headers;
             }
         };
 
-        requestQueue.add(jsonObjectRequest);
+        request_queue.add(request);
     }
 
     private void getSpotifyUserId()
     {
-        new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/me", null,
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/me", null,
                 new Response.Listener<JSONObject>()
                 {
                     @Override
@@ -334,7 +332,7 @@ public class MainActivity extends AppCompatActivity
                     {
                         try
                         {
-                            spotifyUserId = response.getString("id");
+                            spotify_user_id = response.getString("id");
                         }
                         catch (JSONException ex)
                         {
@@ -354,22 +352,24 @@ public class MainActivity extends AppCompatActivity
             public Map<String, String> getHeaders()
             {
                 Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "Bearer " + accessToken);
+                headers.put("Authorization", "Bearer " + access_token);
 
                 return headers;
             }
         };
+
+        request_queue.add(request);
     }
 
-    private void spotifyConnectionResult(int resultCode, Intent intent)
+    private void spotifyConnectionResult(int result_code, Intent intent)
     {
-        AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+        AuthenticationResponse response = AuthenticationClient.getResponse(result_code, intent);
 
         switch (response.getType())
         {
             // Response was successful and contains auth token
             case TOKEN:
-                accessToken = response.getAccessToken();
+                access_token = response.getAccessToken();
                 getTracksHistory();
                 getSpotifyUserId();
 
@@ -383,7 +383,7 @@ public class MainActivity extends AppCompatActivity
 
             // Most likely auth flow was cancelled
             default:
-                accessToken = response.getAccessToken();
+                access_token = response.getAccessToken();
                 getTracksHistory();
                 getSpotifyUserId();
 
