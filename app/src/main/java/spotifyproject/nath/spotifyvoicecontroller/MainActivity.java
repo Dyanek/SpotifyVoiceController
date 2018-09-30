@@ -32,19 +32,21 @@ import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity
 {
-    private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
-    private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
-    private static final int SPOTIFY_REQUEST_CODE = 1337;
+    public static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
+    public static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
+    public static final int SPOTIFY_REQUEST_CODE = 1337;
     public static SpotifyAppRemote spotifyAppRemote;
+    public static String spotifyUserId;
 
     public static RequestQueue requestQueue;
 
-    private String accessToken;
+    public String accessToken;
 
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
     private Button btnOpenMicrophone;
@@ -90,9 +92,10 @@ public class MainActivity extends AppCompatActivity
     {
         super.onStart();
 
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
+                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-        builder.setScopes(new String[]{"streaming"});
+        builder.setScopes(new String[] { "user-read-recently-played", "playlist-read-collaborative", "playlist-read-private" });
         AuthenticationRequest request = builder.build();
 
         AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
@@ -164,21 +167,78 @@ public class MainActivity extends AppCompatActivity
         {
             case SPOTIFY_REQUEST_CODE:
             {
-                SpotifyConnectionResult(resultCode, intent);
+                spotifyConnectionResult(resultCode, intent);
 
                 break;
             }
 
             case SPEECH_OUTPUT_REQUEST_CODE:
             {
-                SpeechOutputResult(resultCode, intent);
+                speechOutputResult(resultCode, intent);
 
                 break;
             }
         }
     }
 
-    private void SpeechOutputResult(int resultCode, Intent intent)
+    private void getTracksHistory()
+    {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/me/player/recently-played?type=track&limit=10", null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        try
+                        {
+                            JSONArray tracksArray = response.getJSONArray("items");
+
+                            for(int i = tracksArray.length()-1; i >= 0; i--)
+                            {
+                                JSONObject track = (JSONObject) tracksArray.get(i);
+
+                                String uri = track.getJSONObject("track").getString("uri");
+
+                                String name = track.getJSONObject("track").getString("name");
+
+                                String album = track.getJSONObject("track").getJSONObject("album").getString("name");
+
+                                String artist = track.getJSONObject("track").getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
+
+                                trackList.add(0, new Track(name, album, artist, uri));
+                            }
+
+                            rvAdapter.notifyItemInserted(0);
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        {
+            @Override
+            public Map<String, String> getHeaders()
+            {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                headers.put("Authorization", "Bearer " + accessToken);
+
+                return headers;
+            }
+        };
+
+        requestQueue.add(request);
+    }
+
+    private void speechOutputResult(int resultCode, Intent intent)
     {
         if(resultCode == RESULT_OK && intent != null)
         {
@@ -228,9 +288,7 @@ public class MainActivity extends AppCompatActivity
                             String artist = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
-                            Track track = new Track(name, album, artist, uri);
-
-                            trackList.add(0, track);
+                            trackList.add(0, new Track(name, album, artist, uri));
                             rvAdapter.notifyItemInserted(0);
 
                             if(instruction.equals("play"))
@@ -266,7 +324,44 @@ public class MainActivity extends AppCompatActivity
         requestQueue.add(jsonObjectRequest);
     }
 
-    private void SpotifyConnectionResult(int resultCode, Intent intent)
+    private void getSpotifyUserId()
+    {
+        new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/me", null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        try
+                        {
+                            spotifyUserId = response.getString("id");
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        {
+            @Override
+            public Map<String, String> getHeaders()
+            {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + accessToken);
+
+                return headers;
+            }
+        };
+    }
+
+    private void spotifyConnectionResult(int resultCode, Intent intent)
     {
         AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
 
@@ -274,9 +369,11 @@ public class MainActivity extends AppCompatActivity
         {
             // Response was successful and contains auth token
             case TOKEN:
-                Toast.makeText(getApplicationContext(), "Connected to Spotify", Toast.LENGTH_SHORT).show();
-
                 accessToken = response.getAccessToken();
+                getTracksHistory();
+                getSpotifyUserId();
+
+                Toast.makeText(getApplicationContext(), "Connected to Spotify", Toast.LENGTH_SHORT).show();
                 break;
 
             // Auth flow returned an error
@@ -287,6 +384,8 @@ public class MainActivity extends AppCompatActivity
             // Most likely auth flow was cancelled
             default:
                 accessToken = response.getAccessToken();
+                getTracksHistory();
+                getSpotifyUserId();
 
                 Toast.makeText(getApplicationContext(), "Handle other case", Toast.LENGTH_SHORT).show();
         }
