@@ -7,5 +7,6 @@
     <color name="primary_btn_bg_color">#1db954</color>
     <color name="primary_btn_txt_color">#000000</color>
     <color name="primary_txt_color">#FFF</color>
+    <color name="secondary_txt_color">#999</color>
     <color name="primary_unavailable_btn_bg_color">#808080</color>
 </resources>

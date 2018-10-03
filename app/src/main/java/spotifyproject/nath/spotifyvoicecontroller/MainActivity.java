@@ -4,20 +4,20 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -55,6 +55,8 @@ public class MainActivity extends AppCompatActivity
 
     private ArrayList<Track> track_list;
 
+    private boolean is_connected_to_spotify = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -72,54 +74,71 @@ public class MainActivity extends AppCompatActivity
         rv_adapter = new TrackAdapter(track_list);
         rv_track_list.setAdapter(rv_adapter);
 
-        btn_open_microphone = findViewById(R.id.btn_open_mic);
+        btn_open_microphone = findViewById(R.id.main_btn_open_mic);
 
         btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                OpenMicrophoneButtonPressed();
+                openMicrophoneButtonPressed();
             }
         });
-    }
 
-    @Override
-    protected void onStart()
-    {
-        super.onStart();
+        BottomNavigationView bottom_navigation_view = findViewById(R.id.bottom_nav_view);
 
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
-
-        builder.setScopes(new String[] { "user-read-recently-played", "playlist-read-collaborative", "playlist-read-private" });
-        AuthenticationRequest request = builder.build();
-
-        AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
-
-        ConnectionParams connection_params =
-                new ConnectionParams.Builder(CLIENT_ID)
-                        .setRedirectUri(REDIRECT_URI)
-                        .showAuthView(true)
-                        .build();
-
-        SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
-                new Connector.ConnectionListener()
+        bottom_navigation_view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener()
+        {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item)
+            {
+                switch (item.getItemId())
                 {
-                    @Override
-                    public void onConnected(SpotifyAppRemote p_spotify_app_remote)
-                    {
-                        spotify_app_remote = p_spotify_app_remote;
+                    case R.id.documentation:
+                        Intent documentation_intent = new Intent(getApplicationContext(), DocumentationActivity.class);
+                        startActivity(documentation_intent);
+                        break;
+                }
+                return false;
+            }
+        });
 
-                        enableSpeechButtonClick();
-                    }
+        if (!is_connected_to_spotify)
+        {
+            AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
+                    AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-                    @Override
-                    public void onFailure(Throwable throwable)
+            builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
+            AuthenticationRequest request = builder.build();
+
+            AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
+
+            ConnectionParams connection_params =
+                    new ConnectionParams.Builder(CLIENT_ID)
+                            .setRedirectUri(REDIRECT_URI)
+                            .showAuthView(true)
+                            .build();
+
+            SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
+                    new Connector.ConnectionListener()
                     {
-                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
+                        @Override
+                        public void onConnected(SpotifyAppRemote p_spotify_app_remote)
+                        {
+                            spotify_app_remote = p_spotify_app_remote;
+
+                            enableSpeechButtonClick();
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable)
+                        {
+                            Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+
+            is_connected_to_spotify = true;
+        }
     }
 
     public void enableSpeechButtonClick()
@@ -137,7 +156,7 @@ public class MainActivity extends AppCompatActivity
         SpotifyAppRemote.CONNECTOR.disconnect(spotify_app_remote);
     }
 
-    private void OpenMicrophoneButtonPressed()
+    private void openMicrophoneButtonPressed()
     {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
@@ -160,7 +179,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onActivityResult(request_code, result_code, intent);
 
-        switch(request_code)
+        switch (request_code)
         {
             case SPOTIFY_REQUEST_CODE:
                 spotifyConnectionResult(result_code, intent);
@@ -184,7 +203,7 @@ public class MainActivity extends AppCompatActivity
                         {
                             JSONArray tracks_array = response.getJSONArray("items");
 
-                            for(int i = tracks_array.length()-1; i >= 0; i--)
+                            for (int i = tracks_array.length() - 1; i >= 0; i--)
                             {
                                 JSONObject track = (JSONObject) tracks_array.get(i);
 
@@ -231,7 +250,7 @@ public class MainActivity extends AppCompatActivity
 
     private void speechOutputResult(int result_code, Intent intent)
     {
-        if(result_code == RESULT_OK && intent != null)
+        if (result_code == RESULT_OK && intent != null)
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
@@ -239,7 +258,7 @@ public class MainActivity extends AppCompatActivity
             {
                 case "play":
                 case "next":
-                    if(words.length > 1)
+                    if (words.length > 1)
                     {
                         StringBuilder string_builder = new StringBuilder();
                         string_builder.append("https://api.spotify.com/v1/search?type=track&limit=1&q=");
@@ -253,7 +272,7 @@ public class MainActivity extends AppCompatActivity
 
                         trackJsonRequest(url, words[0]);
                     }
-                    else if(words[0].equals("play"))
+                    else if (words[0].equals("play"))
                         spotify_app_remote.getPlayerApi().resume();
                     else
                         spotify_app_remote.getPlayerApi().skipNext();
@@ -306,7 +325,7 @@ public class MainActivity extends AppCompatActivity
                             track_list.add(0, new Track(name, album, artist, uri));
                             rv_adapter.notifyItemInserted(0);
 
-                            if(instruction.equals("play"))
+                            if (instruction.equals("play"))
                                 spotify_app_remote.getPlayerApi().play(uri);
                             else
                                 spotify_app_remote.getPlayerApi().queue(uri);

@@ -8,35 +8,34 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/main_btn_open_mic"
+        android:id="@+id/doc_btn_open_mic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:padding="10dp"
-        android:enabled="false"
-        android:background="@color/primary_unavailable_btn_bg_color"
-        android:text="@string/btn_to_open_mic"
+        android:background="@color/primary_btn_bg_color"
         android:drawableEnd="@drawable/ic_microphone"
+        android:padding="10dp"
+        android:text="@string/btn_to_open_mic"
         android:textColor="@color/primary_txt_color"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_track_list"
+        android:id="@+id/rv_command_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="70dp"/>
+        android:layout_marginTop="70dp" />
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/bottom_nav_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:menu="@menu/bottom_navigation_menu"
-        app:itemTextColor="@color/primary_txt_color"
+        app:itemBackground="@color/colorPrimary"
         app:itemIconTint="@color/primary_txt_color"
-        app:itemBackground="@color/colorPrimary"/>
+        app:itemTextColor="@color/primary_txt_color"
+        app:menu="@menu/bottom_navigation_menu" />
 
 </RelativeLayout>
