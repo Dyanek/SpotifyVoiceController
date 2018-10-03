@@ -51,9 +51,7 @@ public class MainActivity extends AppCompatActivity
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
     private Button btn_open_microphone;
 
-    private RecyclerView rv_track_list;
     private RecyclerView.Adapter rv_adapter;
-    private RecyclerView.LayoutManager rv_layout_manager;
 
     private ArrayList<Track> track_list;
 
@@ -65,10 +63,9 @@ public class MainActivity extends AppCompatActivity
 
         request_queue = Volley.newRequestQueue(this);
 
-        rv_track_list = findViewById(R.id.rv_track_list);
+        RecyclerView rv_track_list = findViewById(R.id.rv_track_list);
 
-        rv_layout_manager = new LinearLayoutManager(this);
-        rv_track_list.setLayoutManager(rv_layout_manager);
+        rv_track_list.setLayoutManager(new LinearLayoutManager(this));
 
         track_list = new ArrayList<>();
 
@@ -128,8 +125,8 @@ public class MainActivity extends AppCompatActivity
     public void enableSpeechButtonClick()
     {
         btn_open_microphone.setEnabled(true);
-        btn_open_microphone.setBackgroundResource(R.color.colorButtonBackground);
-        btn_open_microphone.setTextColor(getColor(R.color.colorButtonText));
+        btn_open_microphone.setBackgroundResource(R.color.primary_btn_bg_color);
+        btn_open_microphone.setTextColor(getColor(R.color.primary_btn_txt_color));
     }
 
     @Override
@@ -166,16 +163,12 @@ public class MainActivity extends AppCompatActivity
         switch(request_code)
         {
             case SPOTIFY_REQUEST_CODE:
-            {
                 spotifyConnectionResult(result_code, intent);
                 break;
-            }
 
             case SPEECH_OUTPUT_REQUEST_CODE:
-            {
                 speechOutputResult(result_code, intent);
                 break;
-            }
         }
     }
 
@@ -242,23 +235,47 @@ public class MainActivity extends AppCompatActivity
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
-            if(words[0].equals("play") || words[0].equals("next"))
+            switch (words[0])
             {
-                String url = "https://api.spotify.com/v1/search?type=track&limit=1&q=";
+                case "play":
+                case "next":
+                    if(words.length > 1)
+                    {
+                        StringBuilder string_builder = new StringBuilder();
+                        string_builder.append("https://api.spotify.com/v1/search?type=track&limit=1&q=");
 
-                for(int i = 1; i <= words.length-1; i++)
-                    url += words[i] + "%20";
+                        for (int i = 1; i <= words.length - 1; i++)
+                            string_builder.append(words[i]).append("%20");
 
-                url = url.substring(0, url.length()-3);
+                        String url = string_builder.toString();
 
-                trackJsonRequest(url, words[0]);
+                        url = url.substring(0, url.length() - 3);
+
+                        trackJsonRequest(url, words[0]);
+                    }
+                    else if(words[0].equals("play"))
+                        spotify_app_remote.getPlayerApi().resume();
+                    else
+                        spotify_app_remote.getPlayerApi().skipNext();
+                    break;
+
+                case "previous":
+                    spotify_app_remote.getPlayerApi().skipPrevious();
+                    break;
+
+                case "skip":
+                    spotify_app_remote.getPlayerApi().skipNext();
+                    break;
+
+                case "pause":
+                case "stop":
+                    spotify_app_remote.getPlayerApi().pause();
+                    break;
+
+                case "resume":
+                    spotify_app_remote.getPlayerApi().resume();
+                    break;
             }
-            else if(words[0].equals("skip"))
-                spotify_app_remote.getPlayerApi().skipNext();
-            else if(words[0].equals("pause") || words[0].equals("stop"))
-                spotify_app_remote.getPlayerApi().pause();
-            else if(words[0].equals("resume"))
-                spotify_app_remote.getPlayerApi().resume();
         }
         else
             Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
 {
-    private ArrayList<Track> trackList;
+    private ArrayList<Track> track_list;
 
     static class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
@@ -38,7 +38,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
 
     TrackAdapter(ArrayList<Track> p_track_list)
     {
-        trackList = p_track_list;
+        track_list = p_track_list;
     }
 
     @NonNull
@@ -51,16 +51,16 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
     @Override
     public void onBindViewHolder(@NonNull TrackHolder holder, int position)
     {
-        holder.txt_track_name.setText(defineMaximumSize(trackList.get(position).get_name(),30));
-        holder.txt_album_name.setText(defineMaximumSize(trackList.get(position).get_album(), 20));
-        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + trackList.get(position).get_artist(), 18));
-        holder.uri = trackList.get(position).get_uri();
+        holder.txt_track_name.setText(defineMaximumSize(track_list.get(position).get_name(),30));
+        holder.txt_album_name.setText(defineMaximumSize(track_list.get(position).get_album(), 20));
+        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + track_list.get(position).get_artist(), 18));
+        holder.uri = track_list.get(position).get_uri();
     }
 
     @Override
     public int getItemCount()
     {
-        return trackList.size();
+        return track_list.size();
     }
 
     private String defineMaximumSize(String string_to_check, int max_size)

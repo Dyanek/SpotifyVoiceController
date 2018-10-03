@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Spotify voice controller</string>
-    <string name="homepage">Homepage</string>
     <string name="btn_to_open_mic">What can I do?</string>
     <string name="album_artist_separator">| </string>
+    <string name="playlists">Playlists</string>
+    <string name="historic">Historic</string>
+    <string name="documentation">Documentation</string>
 </resources>

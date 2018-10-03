@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="70dp"
-    android:background="@color/colorPrimary"
+    android:background="@color/colorPrimaryDark"
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
@@ -11,7 +11,8 @@
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_margin="25dp"
-        android:src="@drawable/ic_play_circle" />
+        android:src="@drawable/ic_play_circle"
+        android:contentDescription="Play"/>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -23,7 +24,7 @@
             android:id="@+id/item_track_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/primary_txt_color" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -37,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:maxLength="20"
                 android:text=""
-                android:textColor="@color/colorWhite" />
+                android:textColor="@color/primary_txt_color" />
 
             <TextView
                 android:id="@+id/item_artist_name"
@@ -46,7 +47,7 @@
                 android:maxLength="18"
                 android:layout_marginStart="4dp"
                 android:text="@string/album_artist_separator"
-                android:textColor="@color/colorWhite" />
+                android:textColor="@color/primary_txt_color" />
         </LinearLayout>
 
     </LinearLayout>

@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/playlists"
+        android:title="@string/playlists"
+        android:icon="@drawable/ic_playlists" />
+    <item
+        android:id="@+id/historic"
+        android:title="@string/historic"
+        android:icon="@drawable/ic_tracks"/>
+    <item
+        android:id="@+id/documentation"
+        android:title="@string/documentation"
+        android:icon="@drawable/ic_documentation"/>
+</menu>
