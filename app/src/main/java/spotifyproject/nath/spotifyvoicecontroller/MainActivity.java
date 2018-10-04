@@ -38,30 +38,32 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity
 {
-    private static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
-    private static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
+    public static final String CLIENT_ID = "7c330b477151476e97eae3ee39758a3f";
+    public static final String REDIRECT_URI = "nath.spotifyproject.SpotifyVoiceController://callback";
     private static final int SPOTIFY_REQUEST_CODE = 1337;
     public static SpotifyAppRemote spotify_app_remote;
     public static String spotify_user_id;
 
-    public static RequestQueue request_queue;
+    private RequestQueue request_queue;
 
     public String access_token;
 
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
-    private Button btn_open_microphone;
 
     private RecyclerView.Adapter rv_adapter;
 
     private ArrayList<Track> track_list;
-
-    private boolean is_connected_to_spotify = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Bundle bundle = getIntent().getExtras();
+
+        if(bundle != null)
+            access_token = bundle.getString("access_token");
 
         request_queue = Volley.newRequestQueue(this);
 
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity
         rv_adapter = new TrackAdapter(track_list);
         rv_track_list.setAdapter(rv_adapter);
 
-        btn_open_microphone = findViewById(R.id.main_btn_open_mic);
+        final Button btn_open_microphone = findViewById(R.id.main_btn_open_mic);
 
         btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity
                 {
                     case R.id.documentation:
                         Intent documentation_intent = new Intent(getApplicationContext(), DocumentationActivity.class);
+                        documentation_intent.putExtra("access_token", access_token);
                         startActivity(documentation_intent);
                         break;
                 }
@@ -103,49 +106,43 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        if (!is_connected_to_spotify)
-        {
-            AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
-                    AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
+                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-            builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
-            AuthenticationRequest request = builder.build();
+        builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
+        AuthenticationRequest request = builder.build();
 
-            AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
+        AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
 
-            ConnectionParams connection_params =
-                    new ConnectionParams.Builder(CLIENT_ID)
-                            .setRedirectUri(REDIRECT_URI)
-                            .showAuthView(true)
-                            .build();
+        ConnectionParams connection_params =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(true)
+                        .build();
 
-            SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
-                    new Connector.ConnectionListener()
+        SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
+                new Connector.ConnectionListener()
+                {
+                    @Override
+                    public void onConnected(SpotifyAppRemote p_spotify_app_remote)
                     {
-                        @Override
-                        public void onConnected(SpotifyAppRemote p_spotify_app_remote)
-                        {
-                            spotify_app_remote = p_spotify_app_remote;
+                        spotify_app_remote = p_spotify_app_remote;
+                        enableSpeechButtonClick(btn_open_microphone);
+                    }
 
-                            enableSpeechButtonClick();
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable)
-                        {
-                            Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-
-            is_connected_to_spotify = true;
-        }
+                    @Override
+                    public void onFailure(Throwable throwable)
+                    {
+                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
-    public void enableSpeechButtonClick()
+    public void enableSpeechButtonClick(Button button)
     {
-        btn_open_microphone.setEnabled(true);
-        btn_open_microphone.setBackgroundResource(R.color.primary_btn_bg_color);
-        btn_open_microphone.setTextColor(getColor(R.color.primary_btn_txt_color));
+        button.setEnabled(true);
+        button.setBackgroundResource(R.color.primary_btn_bg_color);
+        button.setTextColor(getColor(R.color.primary_btn_txt_color));
     }
 
     @Override

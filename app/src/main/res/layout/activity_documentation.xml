@@ -14,10 +14,11 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:background="@color/primary_btn_bg_color"
-        android:drawableEnd="@drawable/ic_microphone"
         android:padding="10dp"
+        android:enabled="false"
+        android:background="@color/primary_unavailable_btn_bg_color"
         android:text="@string/btn_to_open_mic"
+        android:drawableEnd="@drawable/ic_microphone"
         android:textColor="@color/primary_txt_color"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

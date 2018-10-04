@@ -14,13 +14,32 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DocumentationActivity extends AppCompatActivity
 {
-    private Button btn_open_microphone;
-
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
+
+    private String access_token;
+
+    private RequestQueue request_queue;
+
+    private SpotifyAppRemote spotify_app_remote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -28,7 +47,14 @@ public class DocumentationActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_documentation);
 
-        btn_open_microphone = findViewById(R.id.doc_btn_open_mic);
+        Bundle bundle = getIntent().getExtras();
+
+        if(bundle != null)
+            access_token = bundle.getString("access_token");
+
+        request_queue = Volley.newRequestQueue(this);
+
+        final Button btn_open_microphone = findViewById(R.id.doc_btn_open_mic);
 
         btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
@@ -57,13 +83,37 @@ public class DocumentationActivity extends AppCompatActivity
                 switch (item.getItemId())
                 {
                     case R.id.historic:
-                        Intent documentation_intent = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(documentation_intent);
+                        Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
+                        historic_intent.putExtra("access_token", access_token);
+                        startActivity(historic_intent);
                         break;
                 }
                 return false;
             }
         });
+
+        ConnectionParams connection_params =
+                new ConnectionParams.Builder(MainActivity.CLIENT_ID)
+                        .setRedirectUri(MainActivity.REDIRECT_URI)
+                        .showAuthView(true)
+                        .build();
+
+        SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
+                new Connector.ConnectionListener()
+                {
+                    @Override
+                    public void onConnected(SpotifyAppRemote p_spotify_app_remote)
+                    {
+                        spotify_app_remote = p_spotify_app_remote;
+                        enableSpeechButtonClick(btn_open_microphone);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable)
+                    {
+                        Toast.makeText(DocumentationActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void openMicrophoneButtonPressed()
@@ -84,6 +134,13 @@ public class DocumentationActivity extends AppCompatActivity
         }
     }
 
+    public void enableSpeechButtonClick(Button button)
+    {
+        button.setEnabled(true);
+        button.setBackgroundResource(R.color.primary_btn_bg_color);
+        button.setTextColor(getColor(R.color.primary_btn_txt_color));
+    }
+
     @Override
     protected void onActivityResult(int request_code, int result_code, Intent intent)
     {
@@ -99,14 +156,113 @@ public class DocumentationActivity extends AppCompatActivity
 
     private void speechOutputResult(int result_code, Intent intent)
     {
-        Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
+        if (result_code == RESULT_OK && intent != null)
+        {
+            String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
+
+            switch (words[0])
+            {
+                case "play":
+                case "next":
+                    if (words.length > 1)
+                    {
+                        StringBuilder string_builder = new StringBuilder();
+                        string_builder.append("https://api.spotify.com/v1/search?type=track&limit=1&q=");
+
+                        for (int i = 1; i <= words.length - 1; i++)
+                            string_builder.append(words[i]).append("%20");
+
+                        String url = string_builder.toString();
+
+                        url = url.substring(0, url.length() - 3);
+
+                        trackJsonRequest(url, words[0]);
+                    }
+                    else if (words[0].equals("play"))
+                        spotify_app_remote.getPlayerApi().resume();
+                    else
+                        spotify_app_remote.getPlayerApi().skipNext();
+                    break;
+
+                case "previous":
+                    spotify_app_remote.getPlayerApi().skipPrevious();
+                    break;
+
+                case "skip":
+                    spotify_app_remote.getPlayerApi().skipNext();
+                    break;
+
+                case "pause":
+                case "stop":
+                    spotify_app_remote.getPlayerApi().pause();
+                    break;
+
+                case "resume":
+                    spotify_app_remote.getPlayerApi().resume();
+                    break;
+            }
+        }
+        else
+            Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
+    }
+
+    private void trackJsonRequest(String url, final String instruction)
+    {
+        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        try
+                        {
+                            String uri = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getString("uri");
+
+                            if (instruction.equals("play"))
+                                spotify_app_remote.getPlayerApi().play(uri);
+                            else
+                                spotify_app_remote.getPlayerApi().queue(uri);
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(DocumentationActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(DocumentationActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        {
+            @Override
+            public Map<String, String> getHeaders()
+            {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                headers.put("Authorization", "Bearer " + access_token);
+
+                return headers;
+            }
+        };
+
+        request_queue.add(request);
     }
 
     private ArrayList<Command> setCommandList()
     {
         ArrayList<Command> command_list = new ArrayList<>();
 
-        command_list.add(new Command("Play a song", "To play a song, say \"Play\" or \"Next\" followed by the title of the song."));
+        command_list.add(new Command("Play", "To play a song, say \"Play\" followed by the title of the song."));
+        command_list.add(new Command("Queue", "To put a song in the play queue, say \"Next\" followed by the title of the song."));
+        command_list.add(new Command("Skip", "To skip a song, say \"skip\" or \"Next\""));
+        command_list.add(new Command("Previous", "To go to the previous song, say \"previous\""));
+        command_list.add(new Command("Pause", "To pause a song, say \"pause\" or \"stop\""));
+        command_list.add(new Command("Resume", "To resume a song, say \"resume\""));
+
 
         return command_list;
     }
