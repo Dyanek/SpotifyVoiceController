@@ -18,13 +18,15 @@
             android:label="@string/historic">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity android:name=".DocumentationActivity"
             android:label="@string/documentation"/>
+
+        <activity android:name=".PlaylistsActivity"
+            android:label="Playlists"/>
 
     </application>
 

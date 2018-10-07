@@ -101,6 +101,12 @@ public class MainActivity extends AppCompatActivity
                         documentation_intent.putExtra("access_token", access_token);
                         startActivity(documentation_intent);
                         break;
+
+                    case R.id.playlists:
+                        Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
+                        playlists_intent.putExtra("access_token", access_token);
+                        startActivity(playlists_intent);
+                        break;
                 }
                 return false;
             }

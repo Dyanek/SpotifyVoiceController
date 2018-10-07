@@ -7,8 +7,6 @@ import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -27,11 +25,10 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DocumentationActivity extends AppCompatActivity
+public class PlaylistsActivity extends AppCompatActivity
 {
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
@@ -45,16 +42,16 @@ public class DocumentationActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_documentation);
+        setContentView(R.layout.activity_playlists);
 
         Bundle bundle = getIntent().getExtras();
 
-        if(bundle != null)
+        if (bundle != null)
             access_token = bundle.getString("access_token");
 
         request_queue = Volley.newRequestQueue(this);
 
-        final Button btn_open_microphone = findViewById(R.id.doc_btn_open_mic);
+        final Button btn_open_microphone = findViewById(R.id.playlists_btn_open_mic);
 
         btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
@@ -64,14 +61,6 @@ public class DocumentationActivity extends AppCompatActivity
                 openMicrophoneButtonPressed();
             }
         });
-
-        RecyclerView rv_command_list = findViewById(R.id.rv_command_list);
-
-        rv_command_list.setLayoutManager(new LinearLayoutManager(this));
-
-        RecyclerView.Adapter rv_adapter = new CommandAdapter(setCommandList());
-        rv_command_list.setAdapter(rv_adapter);
-
 
         BottomNavigationView bottom_navigation_view = findViewById(R.id.bottom_nav_view);
 
@@ -88,11 +77,12 @@ public class DocumentationActivity extends AppCompatActivity
                         startActivity(historic_intent);
                         break;
 
-                    case R.id.playlists:
-                        Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
-                        playlists_intent.putExtra("access_token", access_token);
-                        startActivity(playlists_intent);
+                    case R.id.documentation:
+                        Intent documentation_intent = new Intent(getApplicationContext(), DocumentationActivity.class);
+                        documentation_intent.putExtra("access_token", access_token);
+                        startActivity(documentation_intent);
                         break;
+
                 }
                 return false;
             }
@@ -117,7 +107,7 @@ public class DocumentationActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable)
                     {
-                        Toast.makeText(DocumentationActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(PlaylistsActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -152,7 +142,7 @@ public class DocumentationActivity extends AppCompatActivity
     {
         super.onActivityResult(request_code, result_code, intent);
 
-        switch(request_code)
+        switch (request_code)
         {
             case SPEECH_OUTPUT_REQUEST_CODE:
                 speechOutputResult(result_code, intent);
@@ -232,7 +222,7 @@ public class DocumentationActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(DocumentationActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(PlaylistsActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -240,7 +230,7 @@ public class DocumentationActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(DocumentationActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(PlaylistsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -256,20 +246,5 @@ public class DocumentationActivity extends AppCompatActivity
         };
 
         request_queue.add(request);
-    }
-
-    private ArrayList<Command> setCommandList()
-    {
-        ArrayList<Command> command_list = new ArrayList<>();
-
-        command_list.add(new Command("Play", "To play a song, say \"Play\" followed by the title of the song."));
-        command_list.add(new Command("Queue", "To put a song in the play queue, say \"Next\" followed by the title of the song."));
-        command_list.add(new Command("Skip", "To skip a song, say \"skip\" or \"Next\""));
-        command_list.add(new Command("Previous", "To go to the previous song, say \"previous\""));
-        command_list.add(new Command("Pause", "To pause a song, say \"pause\" or \"stop\""));
-        command_list.add(new Command("Resume", "To resume a song, say \"resume\""));
-
-
-        return command_list;
     }
 }
