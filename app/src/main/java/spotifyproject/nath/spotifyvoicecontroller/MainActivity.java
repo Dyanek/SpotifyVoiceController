@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'historique des musiques", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()

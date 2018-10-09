@@ -50,8 +50,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
     @Override
     public void onBindViewHolder(@NonNull PlaylistHolder holder, int position)
     {
-        holder.txt_playlist_name.setText(defineMaximumSize(playlist_list.get(position).get_name(),30));
-        holder.txt_playlist_author.setText(defineMaximumSize(playlist_list.get(position).get_author(), 30));
+        holder.txt_playlist_name.setText(defineMaximumSize(playlist_list.get(position).get_name()));
+        holder.txt_playlist_author.setText(defineMaximumSize(playlist_list.get(position).get_author()));
         holder.uri = playlist_list.get(position).get_uri();
     }
 
@@ -61,8 +61,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
         return playlist_list.size();
     }
 
-    private String defineMaximumSize(String string_to_check, int max_size)
+    private String defineMaximumSize(String string_to_check)
     {
-        return (string_to_check.length() > max_size) ? string_to_check.substring(0, max_size - 4) + "..." : string_to_check;
+        return (string_to_check.length() > 40) ? string_to_check.substring(0, 36) + "..." : string_to_check;
     }
 }

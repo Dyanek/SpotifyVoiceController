@@ -24,6 +24,7 @@
             android:id="@+id/item_track_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:maxLength="40"
             android:textColor="@color/primary_txt_color" />
 
         <LinearLayout
@@ -43,7 +44,7 @@
                 android:id="@+id/item_artist_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxLength="18"
+                android:maxLength="20"
                 android:layout_marginStart="4dp"
                 android:text="@string/album_artist_separator"
                 android:textColor="@color/secondary_txt_color" />

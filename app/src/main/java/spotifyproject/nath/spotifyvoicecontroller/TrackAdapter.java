@@ -52,9 +52,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
     @Override
     public void onBindViewHolder(@NonNull TrackHolder holder, int position)
     {
-        holder.txt_track_name.setText(defineMaximumSize(track_list.get(position).get_name(),30));
+        holder.txt_track_name.setText(defineMaximumSize(track_list.get(position).get_name(),40));
         holder.txt_album_name.setText(defineMaximumSize(track_list.get(position).get_album(), 20));
-        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + track_list.get(position).get_artist(), 18));
+        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + " "  + track_list.get(position).get_artist(), 20));
         holder.uri = track_list.get(position).get_uri();
     }
 

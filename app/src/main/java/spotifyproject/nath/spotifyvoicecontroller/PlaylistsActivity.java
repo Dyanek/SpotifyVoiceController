@@ -24,6 +24,7 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -110,6 +111,8 @@ public class PlaylistsActivity extends AppCompatActivity
                 return false;
             }
         });
+
+        getUserPlaylists();
 
         ConnectionParams connection_params =
                 new ConnectionParams.Builder(MainActivity.CLIENT_ID)
@@ -246,6 +249,61 @@ public class PlaylistsActivity extends AppCompatActivity
                         catch (JSONException ex)
                         {
                             Toast.makeText(PlaylistsActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(PlaylistsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        {
+            @Override
+            public Map<String, String> getHeaders()
+            {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                headers.put("Authorization", "Bearer " + access_token);
+
+                return headers;
+            }
+        };
+
+        request_queue.add(request);
+    }
+
+    private void getUserPlaylists()
+    {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/users/"+ spotify_user_id +"/playlists", null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        try
+                        {
+                            JSONArray playlists_array = response.getJSONArray("items");
+
+                            for (int i = playlists_array.length() - 1; i >= 0; i--)
+                            {
+                                JSONObject playlist = (JSONObject) playlists_array.get(i);
+
+                                String uri = playlist.getString("uri");
+
+                                String name = playlist.getString("name");
+
+                                String author = playlist.getJSONObject("owner").getString("display_name");
+
+                                playlist_list.add(0, new Playlist(name, author, uri));
+                            }
+
+                            rv_adapter.notifyItemInserted(0);
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(PlaylistsActivity.this, "Erreur lors de la récupération des playlists", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
