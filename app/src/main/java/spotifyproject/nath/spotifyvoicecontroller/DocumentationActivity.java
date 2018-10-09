@@ -41,6 +41,8 @@ public class DocumentationActivity extends AppCompatActivity
 
     private SpotifyAppRemote spotify_app_remote;
 
+    private String spotify_user_id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -50,7 +52,10 @@ public class DocumentationActivity extends AppCompatActivity
         Bundle bundle = getIntent().getExtras();
 
         if(bundle != null)
+        {
             access_token = bundle.getString("access_token");
+            spotify_user_id = bundle.getString("user_id");
+        }
 
         request_queue = Volley.newRequestQueue(this);
 
@@ -85,12 +90,14 @@ public class DocumentationActivity extends AppCompatActivity
                     case R.id.historic:
                         Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
                         historic_intent.putExtra("access_token", access_token);
+                        historic_intent.putExtra("user_id", spotify_user_id);
                         startActivity(historic_intent);
                         break;
 
                     case R.id.playlists:
                         Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
                         playlists_intent.putExtra("access_token", access_token);
+                        playlists_intent.putExtra("user_id", spotify_user_id);
                         startActivity(playlists_intent);
                         break;
                 }

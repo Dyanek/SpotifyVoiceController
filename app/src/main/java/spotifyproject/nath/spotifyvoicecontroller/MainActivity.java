@@ -62,8 +62,11 @@ public class MainActivity extends AppCompatActivity
 
         Bundle bundle = getIntent().getExtras();
 
-        if(bundle != null)
+        if (bundle != null)
+        {
             access_token = bundle.getString("access_token");
+            spotify_user_id = bundle.getString("user_id");
+        }
 
         request_queue = Volley.newRequestQueue(this);
 
@@ -99,12 +102,14 @@ public class MainActivity extends AppCompatActivity
                     case R.id.documentation:
                         Intent documentation_intent = new Intent(getApplicationContext(), DocumentationActivity.class);
                         documentation_intent.putExtra("access_token", access_token);
+                        documentation_intent.putExtra("user_id", spotify_user_id);
                         startActivity(documentation_intent);
                         break;
 
                     case R.id.playlists:
                         Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
                         playlists_intent.putExtra("access_token", access_token);
+                        playlists_intent.putExtra("user_id", spotify_user_id);
                         startActivity(playlists_intent);
                         break;
                 }
@@ -112,13 +117,18 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        if (access_token == null)
+        {
+            AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
+                    AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-        builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
-        AuthenticationRequest request = builder.build();
+            builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
+            AuthenticationRequest request = builder.build();
 
-        AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
+            AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
+        }
+        else
+            getTracksHistory();
 
         ConnectionParams connection_params =
                 new ConnectionParams.Builder(CLIENT_ID)
