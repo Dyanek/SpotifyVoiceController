@@ -7,6 +7,8 @@ import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -25,6 +27,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +41,10 @@ public class PlaylistsActivity extends AppCompatActivity
 
     private SpotifyAppRemote spotify_app_remote;
 
+    private RecyclerView.Adapter rv_adapter;
+
+    private ArrayList<Playlist> playlist_list;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -50,6 +57,15 @@ public class PlaylistsActivity extends AppCompatActivity
             access_token = bundle.getString("access_token");
 
         request_queue = Volley.newRequestQueue(this);
+
+        RecyclerView rv_track_list = findViewById(R.id.rv_playlist_list);
+
+        rv_track_list.setLayoutManager(new LinearLayoutManager(this));
+
+        playlist_list = new ArrayList<>();
+
+        rv_adapter = new PlaylistAdapter(playlist_list);
+        rv_track_list.setAdapter(rv_adapter);
 
         final Button btn_open_microphone = findViewById(R.id.playlists_btn_open_mic);
 

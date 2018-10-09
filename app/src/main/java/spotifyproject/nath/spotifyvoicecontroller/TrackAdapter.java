@@ -66,6 +66,6 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
 
     private String defineMaximumSize(String string_to_check, int max_size)
     {
-        return (string_to_check.length() > max_size) ? string_to_check.substring(0,16) + "..." : string_to_check;
+        return (string_to_check.length() > max_size) ? string_to_check.substring(0, max_size - 4) + "..." : string_to_check;
     }
 }
