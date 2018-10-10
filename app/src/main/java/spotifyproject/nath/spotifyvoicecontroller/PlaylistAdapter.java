@@ -31,7 +31,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
         @Override
         public void onClick(View item_view)
         {
-            MainActivity.spotify_app_remote.getPlayerApi().play(uri);
+            PlaylistsActivity.spotify_app_remote.getPlayerApi().play(uri);
         }
     }
 

@@ -37,7 +37,7 @@ public class PlaylistsActivity extends AppCompatActivity
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
     private RequestQueue request_queue;
-    private SpotifyAppRemote spotify_app_remote;
+    public static SpotifyAppRemote spotify_app_remote;
     private String spotify_user_id;
     private String access_token;
 
