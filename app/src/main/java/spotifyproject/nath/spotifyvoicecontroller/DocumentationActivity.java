@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DocumentationActivity extends AppCompatActivity
+public class DocumentationActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
@@ -207,6 +207,10 @@ public class DocumentationActivity extends AppCompatActivity
                 case "resume":
                     spotify_app_remote.getPlayerApi().resume();
                     break;
+
+                case "create":
+                    createPlaylist(words);
+                    break;
             }
         }
         else
@@ -272,5 +276,27 @@ public class DocumentationActivity extends AppCompatActivity
         command_list.add(new Command("Create playlist", "To create a playlist, say \"Create\" followed by the playlist name."));
 
         return command_list;
+    }
+
+    void createPlaylist(String[] words)
+    {
+        StringBuilder string_builder = new StringBuilder();
+        for(int i = 1; i < words.length; i++)
+            string_builder.append(words[i]).append(" ");
+
+        String playlist_name = string_builder.toString();
+
+        CreatePlaylistAsync create_playlist_request = new CreatePlaylistAsync(spotify_user_id, access_token, playlist_name);
+        create_playlist_request.setOnDownloadCompleteListener(this);
+        create_playlist_request.execute();
+    }
+
+    @Override
+    public void onDownloadComplete(Boolean is_successful, Integer request_code)
+    {
+        if (request_code == 1 && is_successful)
+            Toast.makeText(getApplicationContext(), "Playlist crée avec succès", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
     }
 }
