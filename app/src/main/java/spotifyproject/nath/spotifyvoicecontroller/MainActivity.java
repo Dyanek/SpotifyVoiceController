@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity
             AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
                     AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
-            builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private"});
+            builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative", "playlist-read-private", "playlist-modify-public", "playlist-modify-private"});
             AuthenticationRequest request = builder.build();
 
             AuthenticationClient.openLoginActivity(this, SPOTIFY_REQUEST_CODE, request);
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable)
                     {
-                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -215,11 +215,8 @@ public class MainActivity extends AppCompatActivity
                                 JSONObject track = (JSONObject) tracks_array.get(i);
 
                                 String uri = track.getJSONObject("track").getString("uri");
-
                                 String name = track.getJSONObject("track").getString("name");
-
                                 String album = track.getJSONObject("track").getJSONObject("album").getString("name");
-
                                 String artist = track.getJSONObject("track").getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
                                 track_list.add(0, new Track(name, album, artist, uri));
@@ -229,7 +226,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'historique des musiques", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the tracks history", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -237,7 +234,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -304,7 +301,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         else
-            Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
     }
 
     private void trackJsonRequest(String url, final String instruction)
@@ -339,7 +336,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the track", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -347,7 +344,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -379,7 +376,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(MainActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the user id.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -387,7 +384,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {

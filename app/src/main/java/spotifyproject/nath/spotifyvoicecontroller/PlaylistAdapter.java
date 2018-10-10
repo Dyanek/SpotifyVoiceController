@@ -19,6 +19,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
         TextView txt_playlist_author;
 
         String uri;
+        String id;
 
         PlaylistHolder(View item_view)
         {
@@ -53,6 +54,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
         holder.txt_playlist_name.setText(defineMaximumSize(playlist_list.get(position).get_name()));
         holder.txt_playlist_author.setText(defineMaximumSize(playlist_list.get(position).get_author()));
         holder.uri = playlist_list.get(position).get_uri();
+        holder.id = playlist_list.get(position).get_id();
     }
 
     @Override

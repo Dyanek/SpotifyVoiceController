@@ -125,7 +125,7 @@ public class DocumentationActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable)
                     {
-                        Toast.makeText(DocumentationActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -210,7 +210,7 @@ public class DocumentationActivity extends AppCompatActivity
             }
         }
         else
-            Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
     }
 
     private void trackJsonRequest(String url, final String instruction)
@@ -233,7 +233,7 @@ public class DocumentationActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(DocumentationActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -241,7 +241,7 @@ public class DocumentationActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(DocumentationActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -264,12 +264,12 @@ public class DocumentationActivity extends AppCompatActivity
         ArrayList<Command> command_list = new ArrayList<>();
 
         command_list.add(new Command("Play", "To play a song, say \"Play\" followed by the title of the song."));
-        command_list.add(new Command("Queue", "To put a song in the play queue, say \"Next\" followed by the title of the song."));
-        command_list.add(new Command("Skip", "To skip a song, say \"skip\" or \"Next\""));
-        command_list.add(new Command("Previous", "To go to the previous song, say \"previous\""));
-        command_list.add(new Command("Pause", "To pause a song, say \"pause\" or \"stop\""));
-        command_list.add(new Command("Resume", "To resume a song, say \"resume\""));
-
+        command_list.add(new Command("Add a track to the queue", "To put a song in the play queue, say \"Next\" followed by the title of the song."));
+        command_list.add(new Command("Skip", "To skip a song, say \"Skip\" or \"Next\"."));
+        command_list.add(new Command("Previous", "To go to the previous song, say \"Previous\"."));
+        command_list.add(new Command("Pause", "To pause a song, say \"Pause\" or \"Stop\"."));
+        command_list.add(new Command("Resume", "To resume a song, say \"Resume\"."));
+        command_list.add(new Command("Create playlist", "To create a playlist, say \"Create\" followed by the playlist name."));
 
         return command_list;
     }

@@ -3,7 +3,7 @@ package spotifyproject.nath.spotifyvoicecontroller;
 import android.content.Context;
 import android.widget.Button;
 
-public class Tools
+class Tools
 {
     private Context _current_context;
 
@@ -12,7 +12,7 @@ public class Tools
         _current_context = context;
     }
 
-    public void enableSpeechButtonClick(Button button)
+    void enableSpeechButtonClick(Button button)
     {
         button.setEnabled(true);
         button.setBackgroundResource(R.color.primary_btn_bg_color);

@@ -1,7 +1,9 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
@@ -28,11 +30,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlaylistsActivity extends AppCompatActivity
+public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
@@ -133,7 +140,7 @@ public class PlaylistsActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable)
                     {
-                        Toast.makeText(PlaylistsActivity.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -215,10 +222,14 @@ public class PlaylistsActivity extends AppCompatActivity
                 case "resume":
                     spotify_app_remote.getPlayerApi().resume();
                     break;
+
+                case "create":
+                    createPlaylist(words);
+                    break;
             }
         }
         else
-            Toast.makeText(this, "No text said", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
     }
 
     private void trackJsonRequest(String url, final String instruction)
@@ -241,7 +252,7 @@ public class PlaylistsActivity extends AppCompatActivity
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(PlaylistsActivity.this, "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the track", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -249,7 +260,7 @@ public class PlaylistsActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(PlaylistsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -269,7 +280,9 @@ public class PlaylistsActivity extends AppCompatActivity
 
     private void getUserPlaylists()
     {
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/users/"+ spotify_user_id +"/playlists", null,
+        playlist_list.clear();
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/users/" + spotify_user_id + "/playlists", null,
                 new Response.Listener<JSONObject>()
                 {
                     @Override
@@ -284,19 +297,18 @@ public class PlaylistsActivity extends AppCompatActivity
                                 JSONObject playlist = (JSONObject) playlists_array.get(i);
 
                                 String uri = playlist.getString("uri");
-
+                                String id = playlist.getString("id");
                                 String name = playlist.getString("name");
-
                                 String author = playlist.getJSONObject("owner").getString("display_name");
 
-                                playlist_list.add(0, new Playlist(name, author, uri));
+                                playlist_list.add(0, new Playlist(name, author, uri, id));
                             }
 
                             rv_adapter.notifyItemInserted(0);
                         }
                         catch (JSONException ex)
                         {
-                            Toast.makeText(PlaylistsActivity.this, "Erreur lors de la récupération des playlists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the user's playlists", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -304,7 +316,7 @@ public class PlaylistsActivity extends AppCompatActivity
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Toast.makeText(PlaylistsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         {
@@ -320,5 +332,30 @@ public class PlaylistsActivity extends AppCompatActivity
         };
 
         request_queue.add(request);
+    }
+
+    void createPlaylist(String[] words)
+    {
+        StringBuilder string_builder = new StringBuilder();
+        for(int i = 1; i < words.length; i++)
+            string_builder.append(words[i]).append(" ");
+
+        String playlist_name = string_builder.toString();
+
+        CreatePlaylistAsync create_playlist_request = new CreatePlaylistAsync(spotify_user_id, access_token, playlist_name);
+        create_playlist_request.setOnDownloadCompleteListener(this);
+        create_playlist_request.execute();
+    }
+
+    @Override
+    public void onDownloadComplete(Boolean is_successful, Integer request_code)
+    {
+        if (request_code == 1 && is_successful)
+        {
+            getUserPlaylists();
+            Toast.makeText(getApplicationContext(), "Playlist crée avec succès", Toast.LENGTH_SHORT).show();
+        }
+        else
+            Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
     }
 }
