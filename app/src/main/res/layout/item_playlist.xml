@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="70dp"
+    android:layout_height="wrap_content"
     android:background="@color/colorPrimaryDark"
     android:gravity="center_vertical"
     android:orientation="horizontal">
@@ -10,28 +10,27 @@
         android:id="@+id/item_play_pause"
         android:layout_width="25dp"
         android:layout_height="25dp"
-        android:layout_margin="25dp"
+        android:layout_margin="15dp"
         android:contentDescription="@string/play"
         android:src="@drawable/ic_play_circle" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/item_playlist_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:maxLength="40"
             android:textColor="@color/primary_txt_color" />
 
         <TextView
             android:id="@+id/item_playlist_author"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="12345678901234567890123456789012345678901234567890"
-            android:maxLength="50"
+            android:maxLength="40"
             android:textColor="@color/secondary_txt_color" />
 
     </LinearLayout>

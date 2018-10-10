@@ -36,17 +36,15 @@ public class PlaylistsActivity extends AppCompatActivity
 {
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
+    private RequestQueue request_queue;
+    private SpotifyAppRemote spotify_app_remote;
+    private String spotify_user_id;
     private String access_token;
 
-    private RequestQueue request_queue;
-
-    private SpotifyAppRemote spotify_app_remote;
-
-    private String spotify_user_id;
-
     private RecyclerView.Adapter rv_adapter;
-
     private ArrayList<Playlist> playlist_list;
+
+    private Tools tools;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,6 +59,8 @@ public class PlaylistsActivity extends AppCompatActivity
             access_token = bundle.getString("access_token");
             spotify_user_id = bundle.getString("user_id");
         }
+
+        tools = new Tools(getApplicationContext());
 
         request_queue = Volley.newRequestQueue(this);
 
@@ -127,7 +127,7 @@ public class PlaylistsActivity extends AppCompatActivity
                     public void onConnected(SpotifyAppRemote p_spotify_app_remote)
                     {
                         spotify_app_remote = p_spotify_app_remote;
-                        enableSpeechButtonClick(btn_open_microphone);
+                        tools.enableSpeechButtonClick(btn_open_microphone);
                     }
 
                     @Override
@@ -154,13 +154,6 @@ public class PlaylistsActivity extends AppCompatActivity
         {
             Toast.makeText(getApplicationContext(), "No voice input detected on this device.", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    public void enableSpeechButtonClick(Button button)
-    {
-        button.setEnabled(true);
-        button.setBackgroundResource(R.color.primary_btn_bg_color);
-        button.setTextColor(getColor(R.color.primary_btn_txt_color));
     }
 
     @Override
