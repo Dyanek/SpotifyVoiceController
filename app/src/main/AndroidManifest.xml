@@ -26,7 +26,10 @@
             android:label="@string/documentation"/>
 
         <activity android:name=".PlaylistsActivity"
-            android:label="Playlists"/>
+            android:label="@string/playlists"/>
+        
+        <activity android:name=".PlaylistTracksActivity"
+            android:label="Playlist tracks"/>
 
     </application>
 

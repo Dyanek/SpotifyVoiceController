@@ -130,6 +130,14 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
                 });
     }
 
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+
+        SpotifyAppRemote.CONNECTOR.disconnect(spotify_app_remote);
+    }
+
     private void openMicrophoneButtonPressed()
     {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -295,7 +303,7 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
     public void onDownloadComplete(Boolean is_successful, Integer request_code)
     {
         if (request_code == 1 && is_successful)
-            Toast.makeText(getApplicationContext(), "Playlist crée avec succès", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Playlist créée avec succès", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
     }

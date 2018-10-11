@@ -1,9 +1,7 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
@@ -30,26 +28,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCompleteListener
+public class PlaylistTracksActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
+    public static SpotifyAppRemote spotify_app_remote;
+    public static String spotify_user_id;
+    public String access_token;
+    private RequestQueue request_queue;
+
     private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
-    private RequestQueue request_queue;
-    public static SpotifyAppRemote spotify_app_remote;
-    private String spotify_user_id;
-    private String access_token;
-
     private RecyclerView.Adapter rv_adapter;
-    private ArrayList<Playlist> playlist_list;
+    private ArrayList<Track> track_list;
+
+    private String playlist_name;
+    private String playlist_id;
+    private Integer playlist_size;
 
     private Tools tools;
 
@@ -57,7 +55,7 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_playlists);
+        setContentView(R.layout.activity_playlist_tracks);
 
         Bundle bundle = getIntent().getExtras();
 
@@ -65,22 +63,27 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
         {
             access_token = bundle.getString("access_token");
             spotify_user_id = bundle.getString("user_id");
+            playlist_name = bundle.getString("playlist_name");
+            playlist_id = bundle.getString("playlist_id");
+            playlist_size = bundle.getInt("playlist_size");
         }
+
+        setTitle(playlist_name);
 
         tools = new Tools(getApplicationContext());
 
         request_queue = Volley.newRequestQueue(this);
 
-        RecyclerView rv_track_list = findViewById(R.id.rv_playlist_list);
+        RecyclerView rv_track_list = findViewById(R.id.rv_playlist_track_list);
 
         rv_track_list.setLayoutManager(new LinearLayoutManager(this));
 
-        playlist_list = new ArrayList<>();
+        track_list = new ArrayList<>();
 
-        rv_adapter = new PlaylistAdapter(playlist_list, access_token, spotify_user_id);
+        rv_adapter = new TrackAdapter(track_list, false);
         rv_track_list.setAdapter(rv_adapter);
 
-        final Button btn_open_microphone = findViewById(R.id.playlists_btn_open_mic);
+        final Button btn_open_microphone = findViewById(R.id.playlist_tracks_btn_open_mic);
 
         btn_open_microphone.setOnClickListener(new View.OnClickListener()
         {
@@ -113,12 +116,19 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                         documentation_intent.putExtra("user_id", spotify_user_id);
                         startActivity(documentation_intent);
                         break;
+
+                    case R.id.playlists:
+                        Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
+                        playlists_intent.putExtra("access_token", access_token);
+                        playlists_intent.putExtra("user_id", spotify_user_id);
+                        startActivity(playlists_intent);
+                        break;
                 }
                 return false;
             }
         });
 
-        getUserPlaylists();
+        getPlaylistTracks();
 
         ConnectionParams connection_params =
                 new ConnectionParams.Builder(MainActivity.CLIENT_ID)
@@ -183,6 +193,60 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
         }
     }
 
+    private void getPlaylistTracks()
+    {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks?limit=" + playlist_size, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        try
+                        {
+                            JSONArray tracks_array = response.getJSONArray("items");
+
+                            for (int i = tracks_array.length() - 1; i >= 0; i--)
+                            {
+                                JSONObject track = (JSONObject) tracks_array.get(i);
+
+                                String uri = track.getJSONObject("track").getString("uri");
+                                String name = track.getJSONObject("track").getString("name");
+                                String album = track.getJSONObject("track").getJSONObject("album").getString("name");
+                                String artist = track.getJSONObject("track").getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
+
+                                track_list.add(0, new Track(name, album, artist, uri));
+                            }
+
+                            rv_adapter.notifyItemInserted(0);
+                        }
+                        catch (JSONException ex)
+                        {
+                            Toast.makeText(getApplicationContext(), "Error while trying to get the playlist tracks", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        {
+            @Override
+            public Map<String, String> getHeaders()
+            {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                headers.put("Authorization", "Bearer " + access_token);
+
+                return headers;
+            }
+        };
+
+        request_queue.add(request);
+    }
+
     private void speechOutputResult(int result_code, Intent intent)
     {
         if (result_code == RESULT_OK && intent != null)
@@ -233,10 +297,19 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                 case "create":
                     createPlaylist(words);
                     break;
+
+                case "add":
+                    addTrackToPlaylist(words);
+                    break;
             }
         }
         else
             Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
+    }
+
+    private void addTrackToPlaylist(String[] words)
+    {
+
     }
 
     private void trackJsonRequest(String url, final String instruction)
@@ -251,6 +324,15 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                         {
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
+                            String name = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getString("name");
+                            String album = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getJSONObject("album").getString("name");
+                            String artist = response.getJSONObject("tracks").getJSONArray("items")
+                                    .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
+
+                            track_list.add(0, new Track(name, album, artist, uri));
+                            rv_adapter.notifyItemInserted(0);
 
                             if (instruction.equals("play"))
                                 spotify_app_remote.getPlayerApi().play(uri);
@@ -260,63 +342,6 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                         catch (JSONException ex)
                         {
                             Toast.makeText(getApplicationContext(), "Error while trying to get the track", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, new Response.ErrorListener()
-        {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        })
-        {
-            @Override
-            public Map<String, String> getHeaders()
-            {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Accept", "application/json");
-                headers.put("Authorization", "Bearer " + access_token);
-
-                return headers;
-            }
-        };
-
-        request_queue.add(request);
-    }
-
-    private void getUserPlaylists()
-    {
-        playlist_list.clear();
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/users/" + spotify_user_id + "/playlists", null,
-                new Response.Listener<JSONObject>()
-                {
-                    @Override
-                    public void onResponse(JSONObject response)
-                    {
-                        try
-                        {
-                            JSONArray playlists_array = response.getJSONArray("items");
-
-                            for (int i = playlists_array.length() - 1; i >= 0; i--)
-                            {
-                                JSONObject playlist = (JSONObject) playlists_array.get(i);
-
-                                String uri = playlist.getString("uri");
-                                String id = playlist.getString("id");
-                                String name = playlist.getString("name");
-                                String author = playlist.getJSONObject("owner").getString("display_name");
-                                Integer size = playlist.getJSONObject("tracks").getInt("total");
-
-                                playlist_list.add(0, new Playlist(name, author, uri, id, size));
-                            }
-
-                            rv_adapter.notifyItemInserted(0);
-                        }
-                        catch (JSONException ex)
-                        {
-                            Toast.makeText(getApplicationContext(), "Error while trying to get the user's playlists", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener()
@@ -359,11 +384,9 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
     public void onDownloadComplete(Boolean is_successful, Integer request_code)
     {
         if (request_code == 1 && is_successful)
-        {
-            getUserPlaylists();
             Toast.makeText(getApplicationContext(), "Playlist créée avec succès", Toast.LENGTH_SHORT).show();
-        }
         else
             Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
     }
+
 }

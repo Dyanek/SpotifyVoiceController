@@ -7,11 +7,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.spotify.android.appremote.api.SpotifyAppRemote;
+
 import java.util.ArrayList;
 
 public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
 {
-    private ArrayList<Track> track_list;
+    private ArrayList<Track> _track_list;
+
+    private Boolean _is_main_activity;
 
     static class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
@@ -20,48 +24,55 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder>
         TextView txt_artist_name;
 
         String uri;
+        Boolean is_main_activity;
 
-        TrackHolder(View item_view)
+        TrackHolder(View item_view, Boolean p_is_main_activity)
         {
             super(item_view);
             txt_track_name = itemView.findViewById(R.id.item_track_name);
             txt_album_name = itemView.findViewById(R.id.item_album_name);
             txt_artist_name = itemView.findViewById(R.id.item_artist_name);
             itemView.setOnClickListener(this);
+
+            is_main_activity = p_is_main_activity;
         }
 
         @Override
         public void onClick(View item_view)
         {
-            MainActivity.spotify_app_remote.getPlayerApi().play(uri);
+            if (is_main_activity)
+                MainActivity.spotify_app_remote.getPlayerApi().play(uri);
+            else
+                PlaylistTracksActivity.spotify_app_remote.getPlayerApi().play(uri);
         }
     }
 
-    TrackAdapter(ArrayList<Track> p_track_list)
+    TrackAdapter(ArrayList<Track> track_list, Boolean is_main_activity)
     {
-        track_list = p_track_list;
+        _track_list = track_list;
+        _is_main_activity = is_main_activity;
     }
 
     @NonNull
     @Override
     public TrackHolder onCreateViewHolder(@NonNull ViewGroup parent, int view_type)
     {
-        return new TrackHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_track, parent, false));
+        return new TrackHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_track, parent, false), _is_main_activity);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TrackHolder holder, int position)
     {
-        holder.txt_track_name.setText(defineMaximumSize(track_list.get(position).get_name(),40));
-        holder.txt_album_name.setText(defineMaximumSize(track_list.get(position).get_album(), 20));
-        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + " "  + track_list.get(position).get_artist(), 20));
-        holder.uri = track_list.get(position).get_uri();
+        holder.txt_track_name.setText(defineMaximumSize(_track_list.get(position).get_name(), 40));
+        holder.txt_album_name.setText(defineMaximumSize(_track_list.get(position).get_album(), 20));
+        holder.txt_artist_name.setText(defineMaximumSize(holder.txt_artist_name.getText() + " " + _track_list.get(position).get_artist(), 20));
+        holder.uri = _track_list.get(position).get_uri();
     }
 
     @Override
     public int getItemCount()
     {
-        return track_list.size();
+        return _track_list.size();
     }
 
     private String defineMaximumSize(String string_to_check, int max_size)

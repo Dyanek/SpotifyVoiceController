@@ -71,13 +71,13 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
 
         request_queue = Volley.newRequestQueue(this);
 
-        RecyclerView rv_track_list = findViewById(R.id.rv_track_list);
+        RecyclerView rv_track_list = findViewById(R.id.rv_main_track_list);
 
         rv_track_list.setLayoutManager(new LinearLayoutManager(this));
 
         track_list = new ArrayList<>();
 
-        rv_adapter = new TrackAdapter(track_list);
+        rv_adapter = new TrackAdapter(track_list, true);
         rv_track_list.setAdapter(rv_adapter);
 
         final Button btn_open_microphone = findViewById(R.id.main_btn_open_mic);
@@ -320,13 +320,10 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                         {
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
-
                             String name = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("name");
-
                             String album = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getJSONObject("album").getString("name");
-
                             String artist = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
@@ -383,7 +380,7 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
     public void onDownloadComplete(Boolean is_successful, Integer request_code)
     {
         if (request_code == 1 && is_successful)
-            Toast.makeText(getApplicationContext(), "Playlist crée avec succès", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Playlist créée avec succès", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
     }
