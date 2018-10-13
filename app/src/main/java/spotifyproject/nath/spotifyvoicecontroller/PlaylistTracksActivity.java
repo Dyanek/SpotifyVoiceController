@@ -31,7 +31,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class PlaylistTracksActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
@@ -195,6 +194,8 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
 
     private void getPlaylistTracks()
     {
+        track_list.clear();
+
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks?limit=" + playlist_size, null,
                 new Response.Listener<JSONObject>()
                 {
@@ -257,6 +258,7 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
             {
                 case "play":
                 case "next":
+                case "add":
                     if (words.length > 1)
                     {
                         StringBuilder string_builder = new StringBuilder();
@@ -297,19 +299,10 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
                 case "create":
                     createPlaylist(words);
                     break;
-
-                case "add":
-                    addTrackToPlaylist(words);
-                    break;
             }
         }
         else
             Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
-    }
-
-    private void addTrackToPlaylist(String[] words)
-    {
-
     }
 
     private void trackJsonRequest(String url, final String instruction)
@@ -324,20 +317,19 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
                         {
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
-                            String name = response.getJSONObject("tracks").getJSONArray("items")
-                                    .getJSONObject(0).getString("name");
-                            String album = response.getJSONObject("tracks").getJSONArray("items")
-                                    .getJSONObject(0).getJSONObject("album").getString("name");
-                            String artist = response.getJSONObject("tracks").getJSONArray("items")
-                                    .getJSONObject(0).getJSONObject("album").getJSONArray("artists").getJSONObject(0).getString("name");
 
-                            track_list.add(0, new Track(name, album, artist, uri));
-                            rv_adapter.notifyItemInserted(0);
-
-                            if (instruction.equals("play"))
-                                spotify_app_remote.getPlayerApi().play(uri);
-                            else
-                                spotify_app_remote.getPlayerApi().queue(uri);
+                            switch (instruction)
+                            {
+                                case "play":
+                                    spotify_app_remote.getPlayerApi().play(uri);
+                                    break;
+                                case "add":
+                                    addTrackToPlaylist(uri);
+                                    break;
+                                default:
+                                    spotify_app_remote.getPlayerApi().queue(uri);
+                                    break;
+                            }
                         }
                         catch (JSONException ex)
                         {
@@ -367,10 +359,17 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
         request_queue.add(request);
     }
 
+    private void addTrackToPlaylist(String track_uri)
+    {
+        AddTrackToPlaylistAsync add_track = new AddTrackToPlaylistAsync(playlist_id, track_uri, access_token);
+        add_track.setOnDownloadCompleteListener(this);
+        add_track.execute();
+    }
+
     void createPlaylist(String[] words)
     {
         StringBuilder string_builder = new StringBuilder();
-        for(int i = 1; i < words.length; i++)
+        for (int i = 1; i < words.length; i++)
             string_builder.append(words[i]).append(" ");
 
         String playlist_name = string_builder.toString();
@@ -384,9 +383,11 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
     public void onDownloadComplete(Boolean is_successful, Integer request_code)
     {
         if (request_code == 1 && is_successful)
-            Toast.makeText(getApplicationContext(), "Playlist créée avec succès", Toast.LENGTH_SHORT).show();
+        {
+            getPlaylistTracks();
+            Toast.makeText(getApplicationContext(), "Action performed with success", Toast.LENGTH_SHORT).show();
+        }
         else
-            Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Error while trying to perform the action", Toast.LENGTH_SHORT).show();
     }
-
 }

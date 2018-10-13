@@ -303,8 +303,8 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
     public void onDownloadComplete(Boolean is_successful, Integer request_code)
     {
         if (request_code == 1 && is_successful)
-            Toast.makeText(getApplicationContext(), "Playlist créée avec succès", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Playlist created successfully", Toast.LENGTH_SHORT).show();
         else
-            Toast.makeText(getApplicationContext(), "Erreur lors de la création de la playlist", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Error while creating the playlist", Toast.LENGTH_SHORT).show();
     }
 }
