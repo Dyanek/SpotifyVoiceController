@@ -275,13 +275,19 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
     {
         ArrayList<Command> command_list = new ArrayList<>();
 
-        command_list.add(new Command("Play", "To play a song, say \"Play\" followed by the title of the song."));
-        command_list.add(new Command("Add a track to the queue", "To put a song in the play queue, say \"Next\" followed by the title of the song."));
+        command_list.add(new Command("Play", "To play a song, say \"Play\" followed by " +
+                "the title of the song."));
+        command_list.add(new Command("Add a track to the queue", "To put a song in the " +
+                "play queue, say \"Next\" followed by the title of the song."));
         command_list.add(new Command("Skip", "To skip a song, say \"Skip\" or \"Next\"."));
         command_list.add(new Command("Previous", "To go to the previous song, say \"Previous\"."));
         command_list.add(new Command("Pause", "To pause a song, say \"Pause\" or \"Stop\"."));
         command_list.add(new Command("Resume", "To resume a song, say \"Resume\"."));
-        command_list.add(new Command("Create playlist", "To create a playlist, say \"Create\" followed by the playlist name."));
+        command_list.add(new Command("Create playlist", "To create a playlist, say \"Create\" " +
+                "followed by the playlist name."));
+        command_list.add(new Command("Add a track to a playlist", "To add a track to a " +
+                "playlist, you must select the playlist on the playlists view. Then say \"Add\" followed " +
+                "by the title of the song"));
 
         return command_list;
     }
