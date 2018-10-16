@@ -14,25 +14,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DocumentationActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
     private static final int SPEECH_OUTPUT_REQUEST_CODE = 100;
-
-    private String access_token;
-    private String spotify_user_id;
 
     private Tools tools;
 
@@ -42,15 +28,15 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_documentation);
 
+        tools = new Tools(getApplicationContext());
+
         Bundle bundle = getIntent().getExtras();
 
-        if(bundle != null)
+        if (bundle != null)
         {
-            access_token = bundle.getString("access_token");
-            spotify_user_id = bundle.getString("user_id");
+            tools.set_access_token(bundle.getString("access_token"));
+            tools.set_spotify_user_id(bundle.getString("user_id"));
         }
-
-        tools = new Tools(getApplicationContext());
 
         final Button btn_open_microphone = findViewById(R.id.doc_btn_open_mic);
 
@@ -82,15 +68,15 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
                 {
                     case R.id.historic:
                         Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
-                        historic_intent.putExtra("access_token", access_token);
-                        historic_intent.putExtra("user_id", spotify_user_id);
+                        historic_intent.putExtra("access_token", tools.get_access_token());
+                        historic_intent.putExtra("user_id", tools.get_spotify_user_id());
                         startActivity(historic_intent);
                         break;
 
                     case R.id.playlists:
                         Intent playlists_intent = new Intent(getApplicationContext(), PlaylistsActivity.class);
-                        playlists_intent.putExtra("access_token", access_token);
-                        playlists_intent.putExtra("user_id", spotify_user_id);
+                        playlists_intent.putExtra("access_token", tools.get_access_token());
+                        playlists_intent.putExtra("user_id", tools.get_spotify_user_id());
                         startActivity(playlists_intent);
                         break;
                 }
@@ -106,7 +92,7 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
     {
         super.onStop();
 
-        SpotifyAppRemote.CONNECTOR.disconnect(tools.spotify_app_remote);
+        tools.disconnectSpotifyAppRemote();
     }
 
     private void openMicrophoneButtonPressed()
@@ -140,109 +126,10 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
-            switch (words[0])
-            {
-                case "play":
-                case "next":
-                    if (words.length > 1)
-                    {
-                        StringBuilder string_builder = new StringBuilder();
-                        string_builder.append("https://api.spotify.com/v1/search?type=track&limit=1&q=");
-
-                        for (int i = 1; i <= words.length - 1; i++)
-                            string_builder.append(words[i]).append("%20");
-
-                        String url = string_builder.toString();
-
-                        url = url.substring(0, url.length() - 3);
-
-                        trackJsonRequest(url, words[0]);
-                    }
-                    else if (words[0].equals("play"))
-                        tools.spotify_app_remote.getPlayerApi().resume();
-                    else
-                        tools.spotify_app_remote.getPlayerApi().skipNext();
-                    break;
-
-                case "restart":
-                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
-                    break;
-
-                case "previous":
-                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
-                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
-                    break;
-
-                case "skip":
-                    tools.spotify_app_remote.getPlayerApi().skipNext();
-                    break;
-
-                case "pause":
-                case "stop":
-                    tools.spotify_app_remote.getPlayerApi().pause();
-                    break;
-
-                case "resume":
-                    tools.spotify_app_remote.getPlayerApi().resume();
-                    break;
-
-                case "create":
-                    createPlaylist(words);
-                    break;
-
-                default:
-                    Toast.makeText(getApplicationContext(), "I didn't understand", Toast.LENGTH_SHORT).show();
-                    break;
-            }
+            tools.actionToDo(words, null, null, "other");
         }
         else
             Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
-    }
-
-    private void trackJsonRequest(String url, final String instruction)
-    {
-        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>()
-                {
-                    @Override
-                    public void onResponse(JSONObject response)
-                    {
-                        try
-                        {
-                            String uri = response.getJSONObject("tracks").getJSONArray("items")
-                                    .getJSONObject(0).getString("uri");
-
-                            if (instruction.equals("play"))
-                                tools.spotify_app_remote.getPlayerApi().play(uri);
-                            else
-                                tools.spotify_app_remote.getPlayerApi().queue(uri);
-                        }
-                        catch (JSONException ex)
-                        {
-                            Toast.makeText(getApplicationContext(), "Erreur lors de la récupération de l'objet", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, new Response.ErrorListener()
-        {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        })
-        {
-            @Override
-            public Map<String, String> getHeaders()
-            {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Accept", "application/json");
-                headers.put("Authorization", "Bearer " + access_token);
-
-                return headers;
-            }
-        };
-
-        tools.request_queue.add(request);
     }
 
     private ArrayList<Command> setCommandList()
@@ -265,19 +152,6 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
                 "by the title of the song"));
 
         return command_list;
-    }
-
-    void createPlaylist(String[] words)
-    {
-        StringBuilder string_builder = new StringBuilder();
-        for(int i = 1; i < words.length; i++)
-            string_builder.append(words[i]).append(" ");
-
-        String playlist_name = string_builder.toString();
-
-        CreatePlaylistAsync create_playlist_request = new CreatePlaylistAsync(spotify_user_id, access_token, playlist_name);
-        create_playlist_request.setOnDownloadCompleteListener(this);
-        create_playlist_request.execute();
     }
 
     @Override
