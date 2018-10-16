@@ -1,9 +1,7 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
@@ -17,34 +15,23 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCompleteListener
 {
-    private final int SPEECH_OUTPUT_REQUEST_CODE = 100;
+    private static final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
-    private RequestQueue request_queue;
-    public static SpotifyAppRemote spotify_app_remote;
     private String spotify_user_id;
     private String access_token;
 
@@ -68,8 +55,6 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
         }
 
         tools = new Tools(getApplicationContext());
-
-        request_queue = Volley.newRequestQueue(this);
 
         RecyclerView rv_track_list = findViewById(R.id.rv_playlist_list);
 
@@ -120,28 +105,7 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
 
         getUserPlaylists();
 
-        ConnectionParams connection_params =
-                new ConnectionParams.Builder(MainActivity.CLIENT_ID)
-                        .setRedirectUri(MainActivity.REDIRECT_URI)
-                        .showAuthView(true)
-                        .build();
-
-        SpotifyAppRemote.CONNECTOR.connect(this, connection_params,
-                new Connector.ConnectionListener()
-                {
-                    @Override
-                    public void onConnected(SpotifyAppRemote p_spotify_app_remote)
-                    {
-                        spotify_app_remote = p_spotify_app_remote;
-                        tools.enableSpeechButtonClick(btn_open_microphone);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable)
-                    {
-                        Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
+        tools.connectToSpotifyAppRemote(btn_open_microphone);
     }
 
     @Override
@@ -149,20 +113,14 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
     {
         super.onStop();
 
-        SpotifyAppRemote.CONNECTOR.disconnect(spotify_app_remote);
+        SpotifyAppRemote.CONNECTOR.disconnect(tools.spotify_app_remote);
     }
 
     private void openMicrophoneButtonPressed()
     {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Talk...");
-
         try
         {
-            startActivityForResult(intent, SPEECH_OUTPUT_REQUEST_CODE);
+            startActivityForResult(tools.createOpenMicIntent(), SPEECH_OUTPUT_REQUEST_CODE);
         }
         catch (ActivityNotFoundException tim)
         {
@@ -208,26 +166,31 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                         trackJsonRequest(url, words[0]);
                     }
                     else if (words[0].equals("play"))
-                        spotify_app_remote.getPlayerApi().resume();
+                        tools.spotify_app_remote.getPlayerApi().resume();
                     else
-                        spotify_app_remote.getPlayerApi().skipNext();
+                        tools.spotify_app_remote.getPlayerApi().skipNext();
+                    break;
+
+                case "restart":
+                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
                     break;
 
                 case "previous":
-                    spotify_app_remote.getPlayerApi().skipPrevious();
+                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
+                    tools.spotify_app_remote.getPlayerApi().skipPrevious();
                     break;
 
                 case "skip":
-                    spotify_app_remote.getPlayerApi().skipNext();
+                    tools.spotify_app_remote.getPlayerApi().skipNext();
                     break;
 
                 case "pause":
                 case "stop":
-                    spotify_app_remote.getPlayerApi().pause();
+                    tools.spotify_app_remote.getPlayerApi().pause();
                     break;
 
                 case "resume":
-                    spotify_app_remote.getPlayerApi().resume();
+                    tools.spotify_app_remote.getPlayerApi().resume();
                     break;
 
                 case "create":
@@ -257,9 +220,9 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                                     .getJSONObject(0).getString("uri");
 
                             if (instruction.equals("play"))
-                                spotify_app_remote.getPlayerApi().play(uri);
+                                tools.spotify_app_remote.getPlayerApi().play(uri);
                             else
-                                spotify_app_remote.getPlayerApi().queue(uri);
+                                tools.spotify_app_remote.getPlayerApi().queue(uri);
                         }
                         catch (JSONException ex)
                         {
@@ -286,7 +249,7 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
             }
         };
 
-        request_queue.add(request);
+        tools.request_queue.add(request);
     }
 
     private void getUserPlaylists()
@@ -343,7 +306,7 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
             }
         };
 
-        request_queue.add(request);
+        tools.request_queue.add(request);
     }
 
     void createPlaylist(String[] words)
