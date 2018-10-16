@@ -302,6 +302,10 @@ public class MainActivity extends AppCompatActivity implements OnDownloadComplet
                 case "create":
                     createPlaylist(words);
                     break;
+
+                default:
+                    Toast.makeText(getApplicationContext(), "I didn't understand", Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
         else

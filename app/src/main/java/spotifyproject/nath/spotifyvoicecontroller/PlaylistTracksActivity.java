@@ -127,7 +127,8 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
             }
         });
 
-        getPlaylistTracks();
+        if(playlist_size != 0)
+            getPlaylistTracks();
 
         ConnectionParams connection_params =
                 new ConnectionParams.Builder(MainActivity.CLIENT_ID)
@@ -196,7 +197,8 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
     {
         track_list.clear();
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks?limit=" + playlist_size, null,
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/playlists/"
+                + playlist_id + "/tracks?limit=" + playlist_size, null,
                 new Response.Listener<JSONObject>()
                 {
                     @Override
@@ -299,6 +301,10 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
                 case "create":
                     createPlaylist(words);
                     break;
+
+                default:
+                    Toast.makeText(getApplicationContext(), "I didn't understand", Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
         else
@@ -361,6 +367,7 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
 
     private void addTrackToPlaylist(String track_uri)
     {
+        playlist_size++;
         AddTrackToPlaylistAsync add_track = new AddTrackToPlaylistAsync(playlist_id, track_uri, access_token);
         add_track.setOnDownloadCompleteListener(this);
         add_track.execute();

@@ -233,6 +233,10 @@ public class PlaylistsActivity extends AppCompatActivity implements OnDownloadCo
                 case "create":
                     createPlaylist(words);
                     break;
+
+                default:
+                    Toast.makeText(getApplicationContext(), "I didn't understand", Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
         else
