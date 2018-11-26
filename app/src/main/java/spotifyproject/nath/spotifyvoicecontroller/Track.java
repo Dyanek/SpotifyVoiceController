@@ -1,5 +1,6 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
+// Item représentant un titre des activities Main et PlaylistTracks
 class Track
 {
     private String _name;

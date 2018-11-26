@@ -1,5 +1,6 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
+// Item représentant une commande de l'activity Documentation
 class Command
 {
     private String _name;

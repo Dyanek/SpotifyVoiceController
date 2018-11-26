@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+// Classe permettant d'éviter certaines redondances dans le code
 class Tools implements OnDownloadCompleteListener
 {
     private Context _current_context;
@@ -76,6 +77,7 @@ class Tools implements OnDownloadCompleteListener
         return intent;
     }
 
+    // Méthode permettant de se connecter à l'API Spotify pour contrôler le lecteur (play , pause, skip, ...)
     void connectToSpotifyAppRemote(final Button button)
     {
         ConnectionParams connection_params =
@@ -102,6 +104,7 @@ class Tools implements OnDownloadCompleteListener
                 });
     }
 
+    // Rend le bouton disponible quand la connexion à l'API a été effectuée
     private void enableSpeechButtonClick(Button button)
     {
         button.setEnabled(true);
@@ -114,13 +117,17 @@ class Tools implements OnDownloadCompleteListener
         SpotifyAppRemote.CONNECTOR.disconnect(spotify_app_remote);
     }
 
+    // Méthode appelée à l'issue d'un appel à l'API Google
     void actionToDo(String[] words, @Nullable final ArrayList<Track> track_list, @Nullable final RecyclerView.Adapter rv_adapter,
                     String activity)
     {
+        //Le premier permet de déterminer l'action à effectuer.
         switch (words[0])
         {
+            // Permet de jouer un titre ou d'ajouter un titre dans la queue
             case "play":
             case "next":
+                // Si la phrase n'est pas constituée que de "Play" ou de "Next", comme "Play Bohemian RHapsody"
                 if (words.length > 1)
                 {
                     StringBuilder string_builder = new StringBuilder();
@@ -163,11 +170,13 @@ class Tools implements OnDownloadCompleteListener
                 spotify_app_remote.getPlayerApi().resume();
                 break;
 
+            //Permet de créer une playlist
             case "create":
                 createPlaylist(words);
                 break;
 
             case "add":
+                Toast.makeText(_current_context.getApplicationContext(), "Command not available in the current context", Toast.LENGTH_SHORT).show();
                 break;
 
             default:
@@ -176,6 +185,7 @@ class Tools implements OnDownloadCompleteListener
         }
     }
 
+    // Permet de récupérer un titre demandé
     private void trackJsonRequest(String url, final String instruction, @Nullable final ArrayList<Track> track_list,
                                   @Nullable final RecyclerView.Adapter rv_adapter, final String activity)
     {
@@ -190,6 +200,7 @@ class Tools implements OnDownloadCompleteListener
                             String uri = response.getJSONObject("tracks").getJSONArray("items")
                                     .getJSONObject(0).getString("uri");
 
+                            // Si l'activity actuelle est l'historique alors ajoute le titre dans la liste
                             if(activity.equals("main"))
                             {
                                 String name = response.getJSONObject("tracks").getJSONArray("items")

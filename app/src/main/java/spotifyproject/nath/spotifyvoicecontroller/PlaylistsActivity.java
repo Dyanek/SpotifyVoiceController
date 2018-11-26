@@ -81,11 +81,11 @@ public class PlaylistsActivity extends AppCompatActivity
             {
                 switch (item.getItemId())
                 {
-                    case R.id.historic:
-                        Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
-                        historic_intent.putExtra("access_token", tools.get_access_token());
-                        historic_intent.putExtra("user_id", tools.get_spotify_user_id());
-                        startActivity(historic_intent);
+                    case R.id.history:
+                        Intent history_intent = new Intent(getApplicationContext(), MainActivity.class);
+                        history_intent.putExtra("access_token", tools.get_access_token());
+                        history_intent.putExtra("user_id", tools.get_spotify_user_id());
+                        startActivity(history_intent);
                         break;
 
                     case R.id.documentation:
@@ -149,6 +149,7 @@ public class PlaylistsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
     }
 
+    // Récupère toutes les playlists créées par l'utilisateur ou auxquelles il est abonné
     private void getUserPlaylists()
     {
         playlist_list.clear();
@@ -163,10 +164,12 @@ public class PlaylistsActivity extends AppCompatActivity
                         {
                             JSONArray playlists_array = response.getJSONArray("items");
 
+                            // Parcourt toutes les playlists récupérées
                             for (int i = playlists_array.length() - 1; i >= 0; i--)
                             {
                                 JSONObject playlist = (JSONObject) playlists_array.get(i);
 
+                                // Récupère toutes les informations nécessaires à l'affichage et pour lancer l'activity Playlist
                                 String uri = playlist.getString("uri");
                                 String id = playlist.getString("id");
                                 String name = playlist.getString("name");

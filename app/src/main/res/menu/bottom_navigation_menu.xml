@@ -4,8 +4,8 @@
         android:title="@string/playlists"
         android:icon="@drawable/ic_playlists" />
     <item
-        android:id="@+id/historic"
-        android:title="@string/historic"
+        android:id="@+id/history"
+        android:title="@string/history"
         android:icon="@drawable/ic_tracks"/>
     <item
         android:id="@+id/documentation"

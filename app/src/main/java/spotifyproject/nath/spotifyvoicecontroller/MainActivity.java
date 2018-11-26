@@ -31,11 +31,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/*
+Les méthodes utilisées pour l'utilisation de l'API Spotify sont disponibles à cette adresse :
+https://developer.spotify.com/documentation/web-api/reference/
+
+Les items renvoyés par l'API lors d'une requête sont en Json et ont une structure précise.
+C'est pourquoi il faut passer par des méthodes getJSONObject() ou getJSONArray() comme vous le verrez
+dans mon code.
+ */
+
 public class MainActivity extends AppCompatActivity
 {
+    // Code validant la connexion à l'API Spotify
     private static final int SPOTIFY_REQUEST_CODE = 1337;
     private static final int SPEECH_OUTPUT_REQUEST_CODE = 100;
 
+    // Permet de gérer la liste de l'activity
     private RecyclerView.Adapter rv_adapter;
     private ArrayList<Track> track_list;
 
@@ -51,6 +62,9 @@ public class MainActivity extends AppCompatActivity
 
         Bundle bundle = getIntent().getExtras();
 
+        // Si l'utilisateur vient d'une autre activity
+        /* Access_token et user_id sont passées de vue en vue pour ne pas avoir à effectuer une
+           requête à l'API Spotify à chaque changement de vue */
         if (bundle != null)
         {
             tools.set_access_token(bundle.getString("access_token"));
@@ -104,11 +118,13 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // Si l'access_token n'a encore jamais été récupéré, le récupère pour la première fois
         if (tools.get_access_token() == null)
         {
             AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(Tools.CLIENT_ID,
                     AuthenticationResponse.Type.TOKEN, Tools.REDIRECT_URI);
 
+            // Les paramètres nécessaires pour donner les droits suffisants au compte utilisateur
             builder.setScopes(new String[]{"user-read-recently-played", "playlist-read-collaborative",
                     "playlist-read-private", "playlist-modify-public", "playlist-modify-private"});
             AuthenticationRequest request = builder.build();
@@ -170,10 +186,12 @@ public class MainActivity extends AppCompatActivity
                         {
                             JSONArray tracks_array = response.getJSONArray("items");
 
+                            // Parcourt toutes les musiques récupérées pour créer les items
                             for (int i = tracks_array.length() - 1; i >= 0; i--)
                             {
                                 JSONObject track = (JSONObject) tracks_array.get(i);
 
+                                // Informations à afficher dans chaque item de la liste
                                 String uri = track.getJSONObject("track").getString("uri");
                                 String name = track.getJSONObject("track").getString("name");
                                 String album = track.getJSONObject("track").getJSONObject("album").getString("name");
@@ -216,6 +234,7 @@ public class MainActivity extends AppCompatActivity
     {
         if (result_code == RESULT_OK && intent != null)
         {
+            // Permet d'isoler chaque mot pour connaître l'action à effectuer.
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
             tools.actionToDo(words, track_list, rv_adapter, "main");
@@ -224,6 +243,7 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), "No text said", Toast.LENGTH_SHORT).show();
     }
 
+    // Le SpotifyUserId permet d'effectuer certaines actions sur le compte : création de playlists par exemple
     private void getSpotifyUserId()
     {
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, "https://api.spotify.com/v1/me", null,

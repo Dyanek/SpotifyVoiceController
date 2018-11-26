@@ -90,11 +90,11 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
             {
                 switch (item.getItemId())
                 {
-                    case R.id.historic:
-                        Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
-                        historic_intent.putExtra("access_token", tools.get_access_token());
-                        historic_intent.putExtra("user_id", tools.get_spotify_user_id());
-                        startActivity(historic_intent);
+                    case R.id.history:
+                        Intent history_intent = new Intent(getApplicationContext(), MainActivity.class);
+                        history_intent.putExtra("access_token", tools.get_access_token());
+                        history_intent.putExtra("user_id", tools.get_spotify_user_id());
+                        startActivity(history_intent);
                         break;
 
                     case R.id.documentation:
@@ -217,6 +217,8 @@ public class PlaylistTracksActivity extends AppCompatActivity implements OnDownl
         {
             String[] words = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0).split("\\s+");
 
+            /* Si le mot est égal à "Add", permet d'ajouter un titre dans la playlist, sinon c'est une autre
+               commande qui est utilisée */
             if(words[0].equals("add"))
             {
                 if (words.length > 1)

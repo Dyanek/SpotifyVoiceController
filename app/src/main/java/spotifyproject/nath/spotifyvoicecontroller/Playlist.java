@@ -1,5 +1,6 @@
 package spotifyproject.nath.spotifyvoicecontroller;
 
+// Item représentant une playlist de l'activity Playlists
 class Playlist
 {
     private String _name;

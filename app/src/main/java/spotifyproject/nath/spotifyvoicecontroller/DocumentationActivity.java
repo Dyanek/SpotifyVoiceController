@@ -66,11 +66,11 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
             {
                 switch (item.getItemId())
                 {
-                    case R.id.historic:
-                        Intent historic_intent = new Intent(getApplicationContext(), MainActivity.class);
-                        historic_intent.putExtra("access_token", tools.get_access_token());
-                        historic_intent.putExtra("user_id", tools.get_spotify_user_id());
-                        startActivity(historic_intent);
+                    case R.id.history:
+                        Intent history_intent = new Intent(getApplicationContext(), MainActivity.class);
+                        history_intent.putExtra("access_token", tools.get_access_token());
+                        history_intent.putExtra("user_id", tools.get_spotify_user_id());
+                        startActivity(history_intent);
                         break;
 
                     case R.id.playlists:
@@ -136,6 +136,8 @@ public class DocumentationActivity extends AppCompatActivity implements OnDownlo
     {
         ArrayList<Command> command_list = new ArrayList<>();
 
+        /* La liste des commandes est marquée en dur dans le code. Pour plus de durabilité, nous pouvons
+           imaginer récupérer les informations dans une base de données */
         command_list.add(new Command("Play", "To play a song, say \"Play\" followed by " +
                 "the title of the song."));
         command_list.add(new Command("Add a track to the queue", "To put a song in the " +
